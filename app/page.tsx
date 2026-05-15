@@ -1,65 +1,76 @@
-import Image from "next/image";
+const pillars = [
+  {
+    name: "Código y arquitectura",
+    description:
+      "Señales sobre mantenibilidad, complejidad y fricción técnica acumulada.",
+  },
+  {
+    name: "Documentación y conocimiento",
+    description:
+      "Evidencia sobre trazabilidad, transferencia de conocimiento y dependencia de contexto informal.",
+  },
+  {
+    name: "Personas y proceso",
+    description:
+      "Indicadores de coordinación, capacidad perdida y prácticas de mejora continua.",
+  },
+];
 
 export default function Home() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <main className="min-h-screen bg-background text-foreground">
+      <section className="mx-auto flex min-h-screen w-full max-w-6xl flex-col justify-between gap-14 px-6 py-8 sm:px-10 lg:px-12">
+        <header className="flex items-center justify-between border-b border-border pb-5">
+          <p className="text-sm font-semibold tracking-[0.18em] text-muted-foreground uppercase">
+            MIURA
           </p>
+          <p className="rounded-md border border-border px-3 py-1 text-sm text-muted-foreground">
+            Demo sin login
+          </p>
+        </header>
+
+        <div className="grid gap-12 lg:grid-cols-[1.08fr_0.92fr] lg:items-end">
+          <div className="space-y-7">
+            <p className="text-sm font-medium text-muted-foreground">
+              MVP 0.1 · baseline técnico
+            </p>
+            <h1 className="max-w-3xl text-4xl leading-tight font-semibold tracking-normal sm:text-5xl">
+              Deuda técnica explicada en lenguaje de negocio.
+            </h1>
+            <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
+              MIURA convierte señales técnicas, documentales y de proceso en
+              una evaluación guiada para conversar sobre riesgo, capacidad y
+              coste de no actuar con prudencia metodológica.
+            </p>
+          </div>
+
+          <div className="grid gap-3 rounded-lg border border-border bg-card p-4 shadow-sm">
+            <p className="text-sm font-medium text-muted-foreground">
+              Estado del producto
+            </p>
+            <p className="text-2xl font-semibold">Base reproducible lista</p>
+            <p className="text-sm leading-6 text-muted-foreground">
+              La aplicación no solicita cuentas, corre sobre Next.js App Router
+              y prepara el terreno para evaluación local, scorecard y RAG con
+              citas en tareas posteriores.
+            </p>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {pillars.map((pillar) => (
+            <article
+              key={pillar.name}
+              className="rounded-lg border border-border bg-card p-5"
+            >
+              <h2 className="text-base font-semibold">{pillar.name}</h2>
+              <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                {pillar.description}
+              </p>
+            </article>
+          ))}
         </div>
-      </main>
-    </div>
+      </section>
+    </main>
   );
 }
