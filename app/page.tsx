@@ -38,9 +38,9 @@ export default function Home() {
               Deuda técnica explicada en lenguaje de negocio.
             </h1>
             <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
-              MIURA convierte señales técnicas, documentales y de proceso en
-              una evaluación guiada para conversar sobre riesgo, capacidad y
-              coste de no actuar con prudencia metodológica.
+              MIURA convierte señales técnicas, documentales y de proceso en una
+              evaluación guiada para conversar sobre riesgo, capacidad y coste
+              de no actuar con prudencia metodológica.
             </p>
           </div>
 
