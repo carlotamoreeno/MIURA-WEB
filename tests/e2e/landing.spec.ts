@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("landing smoke renders the MIURA baseline", async ({ page }) => {
+test("landing smoke renders the MIURA visual system baseline", async ({
+  page,
+}) => {
   await page.goto("/");
 
   await expect(page).toHaveTitle(/MIURA Web App/);
@@ -11,4 +13,8 @@ test("landing smoke renders the MIURA baseline", async ({ page }) => {
     }),
   ).toBeVisible();
   await expect(page.getByText("Demo sin login")).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Sistema visual MIURA" }),
+  ).toBeVisible();
+  await expect(page.getByText("Bajo · Controlado")).toBeVisible();
 });

@@ -2,8 +2,8 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
 import Home from "@/app/page";
 
-describe("landing placeholder", () => {
-  test("renders MIURA positioning and the three pillars", () => {
+describe("landing visual system showcase", () => {
+  test("renders MIURA positioning, pillars, and accessible severity states", () => {
     render(<Home />);
 
     expect(
@@ -13,10 +13,10 @@ describe("landing placeholder", () => {
       }),
     ).toBeInTheDocument();
     expect(screen.getByText("Demo sin login")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Sistema visual MIURA" }),
+    ).toBeInTheDocument();
 
-    const pillarHeadings = screen.getAllByRole("heading", { level: 2 });
-
-    expect(pillarHeadings).toHaveLength(3);
     expect(
       screen.getByRole("heading", { name: "Código y arquitectura" }),
     ).toBeInTheDocument();
@@ -26,5 +26,8 @@ describe("landing placeholder", () => {
     expect(
       screen.getByRole("heading", { name: "Personas y proceso" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("Bajo · Controlado")).toBeInTheDocument();
+    expect(screen.getByText("Medio · Priorizar")).toBeInTheDocument();
+    expect(screen.getByText("Alto · Intervenir")).toBeInTheDocument();
   });
 });
