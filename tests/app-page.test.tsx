@@ -2,8 +2,8 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, test } from "vitest";
 import Home from "@/app/page";
 
-describe("landing visual system showcase", () => {
-  test("renders MIURA positioning, pillars, and accessible severity states", () => {
+describe("landing navigation content", () => {
+  test("renders MIURA positioning, pillars, and primary CTA links", () => {
     render(<Home />);
 
     expect(
@@ -12,22 +12,25 @@ describe("landing visual system showcase", () => {
         name: "Deuda técnica explicada en lenguaje de negocio.",
       }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Demo sin login")).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "Sistema visual MIURA" }),
-    ).toBeInTheDocument();
+    expect(screen.getByText("MIURA MVP 0.1")).toBeInTheDocument();
 
     expect(
-      screen.getByRole("heading", { name: "Código y arquitectura" }),
+      screen.getByRole("link", { name: /Crear evaluación MIURA/i }),
+    ).toHaveAttribute("href", "/evaluacion/nueva");
+    expect(
+      screen.getByRole("link", { name: /Preguntar a MIURA/i }),
+    ).toHaveAttribute("href", "/chat");
+
+    expect(
+      screen.getByRole("heading", { name: "Código/arquitectura" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Documentación y conocimiento" }),
+      screen.getByRole("heading", { name: "Documentación/conocimiento" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("heading", { name: "Personas y proceso" }),
+      screen.getByRole("heading", { name: "Personas/proceso" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("Bajo · Controlado")).toBeInTheDocument();
-    expect(screen.getByText("Medio · Priorizar")).toBeInTheDocument();
-    expect(screen.getByText("Alto · Intervenir")).toBeInTheDocument();
+    expect(screen.getByText(/framework preliminar/i)).toBeInTheDocument();
+    expect(screen.getAllByText(/Demo sin login/i).length).toBeGreaterThan(0);
   });
 });

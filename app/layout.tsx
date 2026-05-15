@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { MiuraAppShell } from "@/components/miura/app-shell";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -13,9 +14,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "MIURA Web App",
+  title: {
+    default: "MIURA Web App",
+    template: "%s | MIURA",
+  },
   description:
-    "Baseline técnico de MIURA Web App para evaluar deuda técnica sin login.",
+    "Demo guiada de MIURA para explicar y evaluar deuda técnica sin login.",
 };
 
 export default function RootLayout({
@@ -28,7 +32,9 @@ export default function RootLayout({
       lang="es"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full">
+        <MiuraAppShell>{children}</MiuraAppShell>
+      </body>
     </html>
   );
 }
