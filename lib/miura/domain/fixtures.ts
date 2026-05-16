@@ -48,7 +48,13 @@ function createSampleMetricValue(
 }
 
 const sampleMiuraMetricValues = [
-  createSampleMetricValue("C1", "high"),
+  {
+    ...createSampleMetricValue("C1", "high"),
+    advancedValue: sampleMiuraReducedCaseExpectedResults.remediationEffortHours,
+    unit: "horas de remediación estimadas",
+    source: "Caso ilustrativo reproducible TFG",
+    timeWindow: "Diagnóstico actual",
+  },
   createSampleMetricValue("C2", "high"),
   createSampleMetricValue("C3", "medium"),
   createSampleMetricValue("D1", "medium"),
