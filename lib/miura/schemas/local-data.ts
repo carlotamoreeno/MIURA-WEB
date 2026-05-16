@@ -34,6 +34,7 @@ const EVALUATION_STATUSES = [
 
 const SIMPLE_LEVELS = ["low", "medium", "high"] as const;
 const SCENARIOS = ["conservative", "central", "tensioned"] as const;
+const COVERAGE_STATUSES = ["sufficient", "partial"] as const;
 const RECOMMENDATION_LEVELS = [
   "monitor",
   "mitigate",
@@ -70,6 +71,7 @@ const metricIdSchema = z.enum(METRIC_IDS);
 const evaluationStatusSchema = z.enum(EVALUATION_STATUSES);
 const simpleLevelSchema = z.enum(SIMPLE_LEVELS);
 const scenarioSchema = z.enum(SCENARIOS);
+const coverageStatusSchema = z.enum(COVERAGE_STATUSES);
 const recommendationLevelSchema = z.enum(RECOMMENDATION_LEVELS);
 
 const coverageByPillarSchema = z.strictObject({
@@ -192,10 +194,14 @@ const calculationResultSchema = z.strictObject({
   PDI: unitIntervalSchema,
   DS: unitIntervalSchema,
   coverage: coverageByPillarSchema,
+  coverageStatus: coverageStatusSchema.default("partial"),
+  economicOutputAllowed: z.boolean().default(false),
+  insufficientCoveragePillars: z.array(pillarSchema).default([]),
   pillarResults: z.array(pillarResultSchema).default([]),
   scenarios: z.array(scenarioResultSchema).default([]),
   principal: nonNegativeNumberSchema.optional(),
   breakEven: breakEvenSchema.optional(),
+  assumptions: z.array(z.string().trim().min(1)).default([]),
   warnings: z.array(z.string().trim().min(1)).default([]),
 });
 
@@ -321,6 +327,7 @@ type MetricId = z.infer<typeof metricIdSchema>;
 type EvaluationStatus = z.infer<typeof evaluationStatusSchema>;
 type SimpleLevel = z.infer<typeof simpleLevelSchema>;
 type Scenario = z.infer<typeof scenarioSchema>;
+type CoverageStatus = z.infer<typeof coverageStatusSchema>;
 type RecommendationLevel = z.infer<typeof recommendationLevelSchema>;
 type Workspace = z.infer<typeof workspaceSchema>;
 type Project = z.infer<typeof projectSchema>;
@@ -478,6 +485,7 @@ function serializeMiuraLocalExport(
 
 export {
   CURRENT_LOCAL_SCHEMA_VERSION,
+  COVERAGE_STATUSES,
   EVALUATION_STATUSES,
   METRIC_IDS,
   PILLARS,
@@ -486,6 +494,7 @@ export {
   SIMPLE_LEVELS,
   calculationResultSchema,
   coverageByPillarSchema,
+  coverageStatusSchema,
   evaluationSchema,
   evaluationStatusSchema,
   metricIdSchema,
@@ -504,6 +513,7 @@ export {
   validateMiuraLocalExport,
   workspaceSchema,
   type CalculationResult,
+  type CoverageStatus,
   type Evaluation,
   type EvaluationStatus,
   type LocalSchemaIssue,

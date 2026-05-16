@@ -1,6 +1,7 @@
 import {
   PILLARS,
   type CalculationResult,
+  type CoverageStatus,
   type Evaluation,
   type MetricId,
   type MetricValue,
@@ -14,6 +15,7 @@ import {
 } from "@/lib/miura/schemas";
 
 import {
+  MIURA_PILLARS,
   getMetricDefinition,
   getMetricsByPillar,
   normalizeSimpleMetricValue,
@@ -41,8 +43,15 @@ const MIURA_FRICTION_SCENARIOS = [
 ] as const satisfies readonly { scenario: Scenario; lambda: number }[];
 
 const METRICS_PER_PILLAR = 4;
+const MINIMUM_ECONOMIC_COVERAGE = 0.5;
 const CENTRAL_SCENARIO: Scenario = "central";
 const REMEDIATION_EFFORT_METRIC_ID: MetricId = "C1";
+const DEFAULT_CALCULATION_ASSUMPTIONS = [
+  "MIURA es un framework metodológico preliminar y no está validado industrialmente.",
+  "DS es un índice sintético de severidad relativa; no mide directamente horas, euros ni probabilidad de fallo.",
+  "Los escenarios de fricción y PWC son proyecciones paramétricas bajo supuestos declarados, no contabilidad exacta ni predicción calibrada.",
+  "La monetización fuerte requiere cobertura mínima Cov_j >= 0.50 en los tres pilares.",
+] as const;
 
 type CalculateMiuraEvaluationInput = {
   evaluation: Evaluation;
@@ -71,6 +80,16 @@ type CalculatePrincipalInput = {
 type CalculateBreakEvenInput = {
   principal?: number;
   scenarios: readonly ScenarioResult[];
+  hourlyCost?: number;
+};
+
+type CoverageSummary = {
+  coverageStatus: CoverageStatus;
+  insufficientCoveragePillars: Pillar[];
+};
+
+type CalculateEconomicOutputAllowedInput = {
+  coverageStatus: CoverageStatus;
   hourlyCost?: number;
 };
 
@@ -241,6 +260,31 @@ function calculatePillarResult(
   };
 }
 
+function calculateCoverageSummary(
+  pillarResults: readonly PillarResult[],
+): CoverageSummary {
+  const insufficientCoveragePillars = PILLARS.filter((pillar) => {
+    const pillarResult = pillarResults.find(
+      (result) => result.pillar === pillar,
+    );
+
+    return (pillarResult?.coverage ?? 0) < MINIMUM_ECONOMIC_COVERAGE;
+  });
+
+  return {
+    coverageStatus:
+      insufficientCoveragePillars.length === 0 ? "sufficient" : "partial",
+    insufficientCoveragePillars,
+  };
+}
+
+function calculateEconomicOutputAllowed({
+  coverageStatus,
+  hourlyCost,
+}: CalculateEconomicOutputAllowedInput) {
+  return coverageStatus === "sufficient" && isPositiveNumber(hourlyCost);
+}
+
 function calculateDebtSeverity({ CDI, DDI, PDI }: CalculateDebtSeverityInput) {
   return roundTo(
     MIURA_DS_WEIGHTS.CDI * CDI +
@@ -332,6 +376,29 @@ function calculateBreakEven({
   };
 }
 
+function pillarLabel(pillar: Pillar) {
+  return MIURA_PILLARS.find(
+    (pillarDefinition) => pillarDefinition.id === pillar,
+  )?.label;
+}
+
+function coverageWarningText(
+  pillarResults: readonly PillarResult[],
+  insufficientCoveragePillars: readonly Pillar[],
+) {
+  const insufficientCoverageSummary = insufficientCoveragePillars
+    .map((pillar) => {
+      const coverage =
+        pillarResults.find((pillarResult) => pillarResult.pillar === pillar)
+          ?.coverage ?? 0;
+
+      return `${pillarLabel(pillar) ?? pillar} (${coverage.toFixed(2)})`;
+    })
+    .join(", ");
+
+  return `Diagnóstico parcial: cobertura insuficiente para monetización en ${insufficientCoverageSummary}. Se mantienen índices y capacidad perdida, pero se bloquean PWC, principal y break-even hasta mejorar evidencia.`;
+}
+
 function calculateMiuraEvaluation(
   input: CalculateMiuraEvaluationInput,
 ): CalculationResult {
@@ -346,28 +413,52 @@ function calculateMiuraEvaluation(
   const DDI = documentationResult?.indexValue ?? 0;
   const PDI = peopleResult?.indexValue ?? 0;
   const DS = calculateDebtSeverity({ CDI, DDI, PDI });
+  const coverageSummary = calculateCoverageSummary(pillarResults);
+  const monetaryHourlyCost = isPositiveNumber(project.hourlyCost)
+    ? project.hourlyCost
+    : undefined;
+  const economicOutputAllowed = calculateEconomicOutputAllowed({
+    coverageStatus: coverageSummary.coverageStatus,
+    hourlyCost: monetaryHourlyCost,
+  });
   const scenarios = calculateFrictionScenarios({
     DS,
     monthlyCapacityHours: project.monthlyCapacityHours,
     horizonMonths: evaluation.horizonMonths,
-    hourlyCost: project.hourlyCost,
+    hourlyCost: economicOutputAllowed ? monetaryHourlyCost : undefined,
     currency: project.currency,
   });
-  const principal = calculatePrincipal({
-    metricValues: evaluation.metricValues,
-    hourlyCost: project.hourlyCost,
-  });
-  const breakEven = calculateBreakEven({
-    principal,
-    scenarios,
-    hourlyCost: project.hourlyCost,
-  });
+  const principal = economicOutputAllowed
+    ? calculatePrincipal({
+        metricValues: evaluation.metricValues,
+        hourlyCost: monetaryHourlyCost,
+      })
+    : undefined;
+  const breakEven = economicOutputAllowed
+    ? calculateBreakEven({
+        principal,
+        scenarios,
+        hourlyCost: monetaryHourlyCost,
+      })
+    : undefined;
 
-  if (!isPositiveNumber(project.hourlyCost)) {
+  if (coverageSummary.coverageStatus === "partial") {
+    warnings.push(
+      coverageWarningText(
+        pillarResults,
+        coverageSummary.insufficientCoveragePillars,
+      ),
+    );
+  }
+
+  if (monetaryHourlyCost === undefined) {
     warnings.push(
       "No se calcula PWC, principal ni break-even porque falta un coste hora positivo.",
     );
-  } else if (principal === undefined) {
+  } else if (
+    coverageSummary.coverageStatus === "sufficient" &&
+    principal === undefined
+  ) {
     warnings.push(
       "No se calcula principal ni break-even porque C1 no incluye esfuerzo de remediación avanzado positivo.",
     );
@@ -384,26 +475,36 @@ function calculateMiuraEvaluation(
       documentation_knowledge: documentationResult?.coverage ?? 0,
       people_process: peopleResult?.coverage ?? 0,
     },
+    coverageStatus: coverageSummary.coverageStatus,
+    economicOutputAllowed,
+    insufficientCoveragePillars: coverageSummary.insufficientCoveragePillars,
     pillarResults,
     scenarios,
     ...(principal === undefined ? {} : { principal }),
     ...(breakEven === undefined ? {} : { breakEven }),
+    assumptions: [...DEFAULT_CALCULATION_ASSUMPTIONS],
     warnings,
   };
 }
 
 export {
+  DEFAULT_CALCULATION_ASSUMPTIONS,
   MIURA_DS_WEIGHTS,
   MIURA_FRICTION_SCENARIOS,
+  MINIMUM_ECONOMIC_COVERAGE,
   calculateBreakEven,
+  calculateCoverageSummary,
   calculateDebtSeverity,
+  calculateEconomicOutputAllowed,
   calculateFrictionScenarios,
   calculateMiuraEvaluation,
   calculatePrincipal,
   type BreakEvenResult,
   type CalculateBreakEvenInput,
   type CalculateDebtSeverityInput,
+  type CalculateEconomicOutputAllowedInput,
   type CalculateFrictionScenariosInput,
   type CalculateMiuraEvaluationInput,
   type CalculatePrincipalInput,
+  type CoverageSummary,
 };

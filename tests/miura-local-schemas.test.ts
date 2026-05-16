@@ -271,6 +271,69 @@ describe("MIURA local data schemas", () => {
     );
   });
 
+  test("validates calculation result coverage gating fields", () => {
+    const exportData = createValidLocalExport();
+    exportData.evaluations[0].calculationResult = {
+      evaluationId: "evaluation-demo",
+      CDI: 0.7,
+      DDI: 0.6,
+      PDI: 0.8,
+      DS: 0.71,
+      coverage: {
+        code_architecture: 0.25,
+        documentation_knowledge: 0.75,
+        people_process: 0.75,
+      },
+      coverageStatus: "partial",
+      economicOutputAllowed: false,
+      insufficientCoveragePillars: ["code_architecture"],
+      scenarios: [
+        {
+          scenario: "central",
+          lambda: 0.25,
+          CF: 0.1775,
+          lostHoursMonthly: 149.1,
+          lostHoursTotal: 1789.2,
+          currency: "EUR",
+        },
+      ],
+      assumptions: ["MIURA es preliminar y no está validado industrialmente."],
+      warnings: ["Diagnóstico parcial por cobertura insuficiente."],
+    };
+
+    expect(validateMiuraLocalExport(exportData).success).toBe(true);
+  });
+
+  test("rejects invalid calculation coverage status and insufficient pillar IDs", () => {
+    const exportData = createValidLocalExport();
+    exportData.evaluations[0].calculationResult = {
+      evaluationId: "evaluation-demo",
+      CDI: 0.7,
+      DDI: 0.6,
+      PDI: 0.8,
+      DS: 0.71,
+      coverage: {
+        code_architecture: 0.75,
+        documentation_knowledge: 0.75,
+        people_process: 0.75,
+      },
+      coverageStatus: "unknown",
+      economicOutputAllowed: true,
+      insufficientCoveragePillars: ["business"],
+      scenarios: [],
+      assumptions: [],
+      warnings: [],
+    };
+
+    const result = expectFailure(validateMiuraLocalExport(exportData));
+    const paths = result.issues.map((issue) => issue.path);
+
+    expect(paths).toContain("evaluations.0.calculationResult.coverageStatus");
+    expect(paths).toContain(
+      "evaluations.0.calculationResult.insufficientCoveragePillars.0",
+    );
+  });
+
   test("requires complete recommendation sets when present", () => {
     const exportData = createValidLocalExport();
     exportData.evaluations[0].recommendationSet = {

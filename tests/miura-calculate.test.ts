@@ -1,6 +1,7 @@
 import { describe, expect, test } from "vitest";
 
 import {
+  calculateCoverageSummary,
   calculateBreakEven,
   calculateDebtSeverity,
   calculateFrictionScenarios,
@@ -54,6 +55,18 @@ describe("MIURA calculation engine", () => {
       documentation_knowledge: 0.75,
       people_process: 0.75,
     });
+    expect(result.coverageStatus).toBe("sufficient");
+    expect(result.economicOutputAllowed).toBe(true);
+    expect(result.insufficientCoveragePillars).toEqual([]);
+    expect(
+      result.scenarios.every((scenario) => scenario.PWC !== undefined),
+    ).toBe(true);
+    expect(result.principal).toBe(21840);
+    expect(result.breakEven?.months).toBe(3.5);
+    expect(result.assumptions.join(" ")).toMatch(
+      /preliminar|no está validado industrialmente/i,
+    );
+    expect(result.assumptions.join(" ")).toMatch(/no contabilidad exacta/i);
     expect(calculationResultSchema.safeParse(result).success).toBe(true);
   });
 
@@ -130,7 +143,7 @@ describe("MIURA calculation engine", () => {
     expect(breakEven?.assumptions.join(" ")).toMatch(/heurística|central/i);
   });
 
-  test("renormalizes over observed metrics and reduces coverage for unavailable values", () => {
+  test("allows economic output at the exact 0.50 coverage threshold", () => {
     const partialEvaluation = replaceMetricValue(
       sampleEvaluation,
       "C3",
@@ -147,7 +160,76 @@ describe("MIURA calculation engine", () => {
 
     expect(result.CDI).toBe(0.8);
     expect(result.coverage.code_architecture).toBe(0.5);
+    expect(result.coverageStatus).toBe("sufficient");
+    expect(result.economicOutputAllowed).toBe(true);
+    expect(result.insufficientCoveragePillars).toEqual([]);
+    expect(
+      result.scenarios.every((scenario) => scenario.PWC !== undefined),
+    ).toBe(true);
+    expect(result.principal).toBe(21840);
     expect(result.warnings.join(" ")).toMatch(/C3 .*no disponible/i);
+  });
+
+  test("blocks strong monetary output below 0.50 coverage while keeping diagnostic indexes and lost hours", () => {
+    const lowCoverageEvaluation = replaceMetricValue(
+      replaceMetricValue(sampleEvaluation, "C2", (metricValue) => ({
+        ...metricValue,
+        available: false,
+      })),
+      "C3",
+      (metricValue) => ({
+        ...metricValue,
+        available: false,
+      }),
+    );
+
+    const result = calculateMiuraEvaluation({
+      evaluation: lowCoverageEvaluation,
+      project: sampleProject,
+    });
+
+    expect(result.CDI).toBe(0.8);
+    expect(result.DDI).toBe(0.6);
+    expect(result.PDI).toBe(0.8);
+    expect(result.coverage.code_architecture).toBe(0.25);
+    expect(result.coverageStatus).toBe("partial");
+    expect(result.economicOutputAllowed).toBe(false);
+    expect(result.insufficientCoveragePillars).toEqual(["code_architecture"]);
+    expect(
+      result.scenarios.every(
+        (scenario) =>
+          scenario.lostHoursMonthly > 0 &&
+          scenario.lostHoursTotal > 0 &&
+          scenario.PWC === undefined,
+      ),
+    ).toBe(true);
+    expect(result.principal).toBeUndefined();
+    expect(result.breakEven).toBeUndefined();
+    expect(result.warnings.join(" ")).toMatch(/Diagnóstico parcial/i);
+    expect(result.warnings.join(" ")).toMatch(/PWC, principal y break-even/i);
+  });
+
+  test("derives partial coverage summaries with explicit insufficient pillars", () => {
+    const result = calculateMiuraEvaluation({
+      evaluation: sampleEvaluation,
+      project: sampleProject,
+    });
+    const coverageSummary = calculateCoverageSummary([
+      {
+        ...result.pillarResults[0]!,
+        coverage: 0.49,
+      },
+      result.pillarResults[1]!,
+      {
+        ...result.pillarResults[2]!,
+        coverage: 0.5,
+      },
+    ]);
+
+    expect(coverageSummary).toEqual({
+      coverageStatus: "partial",
+      insufficientCoveragePillars: ["code_architecture"],
+    });
   });
 
   test("normalizes protective simple metrics inversely during calculation", () => {
@@ -182,6 +264,9 @@ describe("MIURA calculation engine", () => {
     expect(
       result.scenarios.every((scenario) => scenario.PWC === undefined),
     ).toBe(true);
+    expect(result.coverageStatus).toBe("sufficient");
+    expect(result.economicOutputAllowed).toBe(false);
+    expect(result.insufficientCoveragePillars).toEqual([]);
     expect(result.principal).toBeUndefined();
     expect(result.breakEven).toBeUndefined();
     expect(result.warnings.join(" ")).toMatch(/coste hora positivo/i);
