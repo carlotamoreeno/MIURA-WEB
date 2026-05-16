@@ -30,7 +30,13 @@ describe("landing navigation content", () => {
     expect(
       screen.getByRole("heading", { name: "Personas/proceso" }),
     ).toBeInTheDocument();
-    expect(screen.getByText(/framework preliminar/i)).toBeInTheDocument();
+    expect(
+      screen.getByText(/framework metodológico preliminar/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/no son contabilidad exacta/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /Ver glosario de siglas y fórmulas/i }),
+    ).toHaveAttribute("href", "/glosario");
     expect(screen.getAllByText(/Demo sin login/i).length).toBeGreaterThan(0);
   });
 });

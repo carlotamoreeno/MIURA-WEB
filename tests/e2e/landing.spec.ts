@@ -32,6 +32,10 @@ test.describe("MIURA navigation shell", () => {
     await expect(
       page.getByRole("heading", { name: "Demo sin login" }),
     ).toBeVisible();
+    await expect(page.getByText(/no son contabilidad exacta/i)).toBeVisible();
+    await expect(
+      page.getByRole("link", { name: /Ver glosario de siglas y fórmulas/i }),
+    ).toHaveAttribute("href", "/glosario");
   });
 
   test("mobile sidebar opens and navigates to glossary", async ({ page }) => {

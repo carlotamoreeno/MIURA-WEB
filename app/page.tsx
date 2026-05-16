@@ -13,6 +13,7 @@ import {
   MvpNotice,
   PageIntro,
 } from "@/components/miura/page-structure";
+import { MIURA_DISCLAIMERS } from "@/lib/miura/domain";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 
@@ -43,7 +44,7 @@ const pillars = [
 const valuePoints = [
   "Traduce deuda técnica a conversación de riesgo y capacidad.",
   "Mantiene la evaluación local en el navegador durante el MVP.",
-  "Presenta MIURA como marco preliminar, no como validación industrial.",
+  "Acompaña métricas, fórmulas y siglas con ayuda contextual y glosario.",
 ];
 
 export default function Home() {
@@ -135,10 +136,15 @@ export default function Home() {
           </p>
         </div>
         <InfoTileGrid items={pillars} />
-        <MvpNotice title="Alcance metodológico">
-          MIURA se presenta como framework preliminar y no validado
-          industrialmente. Las salidas económicas futuras serán escenarios
-          proyectados con supuestos explícitos, no contabilidad exacta.
+        <MvpNotice title="Alcance metodológico de la demo">
+          <span className="block">{MIURA_DISCLAIMERS.preliminary}</span>
+          <span className="mt-2 block">{MIURA_DISCLAIMERS.economic}</span>
+          <Link
+            href="/glosario"
+            className="text-info-foreground mt-3 inline-flex font-medium underline-offset-4 hover:underline"
+          >
+            Ver glosario de siglas y fórmulas
+          </Link>
         </MvpNotice>
       </section>
     </>

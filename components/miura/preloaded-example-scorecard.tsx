@@ -1,7 +1,12 @@
 import { CheckCircle2Icon } from "lucide-react";
 
+import { HelpTooltip } from "@/components/miura/help-tooltip";
 import { SeverityIndicator } from "@/components/miura/severity-indicator";
-import { buildPreloadedMiuraExampleSnapshot } from "@/lib/miura/domain";
+import {
+  buildPreloadedMiuraExampleSnapshot,
+  getMiuraFormulaHelp,
+  type MiuraFormulaHelp,
+} from "@/lib/miura/domain";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -22,45 +27,67 @@ function formatScore(value: number) {
   return value.toFixed(2);
 }
 
+function ScoreValueCard({
+  label,
+  value,
+  help,
+}: {
+  label: string;
+  value: number;
+  help: MiuraFormulaHelp;
+}) {
+  return (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between gap-2">
+          <CardDescription>{label}</CardDescription>
+          <HelpTooltip
+            title={help.title}
+            description={help.summary}
+            ariaLabel={`Ayuda sobre ${label}`}
+            side="bottom"
+          >
+            <span className="text-background/80">{help.formula}</span>
+            <span className="text-background/80">
+              {help.businessExplanation}
+            </span>
+          </HelpTooltip>
+        </div>
+        <CardTitle className="text-2xl">{formatScore(value)}</CardTitle>
+      </CardHeader>
+    </Card>
+  );
+}
+
 function PreloadedExampleScorecard() {
   const example = buildPreloadedMiuraExampleSnapshot();
   const { scorecard } = example;
+  const pillarIndexesHelp = getMiuraFormulaHelp("pillar-indexes");
+  const debtSeverityHelp = getMiuraFormulaHelp("debt-severity");
 
   return (
     <div className="space-y-5">
       <div className="grid gap-4 md:grid-cols-4">
-        <Card>
-          <CardHeader>
-            <CardDescription>CDI</CardDescription>
-            <CardTitle className="text-2xl">
-              {formatScore(scorecard.CDI)}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardDescription>DDI</CardDescription>
-            <CardTitle className="text-2xl">
-              {formatScore(scorecard.DDI)}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardDescription>PDI</CardDescription>
-            <CardTitle className="text-2xl">
-              {formatScore(scorecard.PDI)}
-            </CardTitle>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardDescription>DS</CardDescription>
-            <CardTitle className="text-2xl">
-              {formatScore(scorecard.DS)}
-            </CardTitle>
-          </CardHeader>
-        </Card>
+        <ScoreValueCard
+          label="CDI"
+          value={scorecard.CDI}
+          help={pillarIndexesHelp}
+        />
+        <ScoreValueCard
+          label="DDI"
+          value={scorecard.DDI}
+          help={pillarIndexesHelp}
+        />
+        <ScoreValueCard
+          label="PDI"
+          value={scorecard.PDI}
+          help={pillarIndexesHelp}
+        />
+        <ScoreValueCard
+          label="DS"
+          value={scorecard.DS}
+          help={debtSeverityHelp}
+        />
       </div>
 
       <Card>

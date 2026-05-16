@@ -11,6 +11,7 @@ import {
   SaveIcon,
 } from "lucide-react";
 
+import { HelpTooltip } from "@/components/miura/help-tooltip";
 import {
   MIURA_PILLARS,
   TOTAL_METRICS,
@@ -303,6 +304,29 @@ function SimpleLevelPicker({
   );
 }
 
+function MetricHelpTooltip({ metric }: { metric: MetricDefinition }) {
+  const protectiveCopy =
+    metric.riskDirection === "higher_is_better"
+      ? "Métrica protectora: una valoración alta reduce severidad porque protege al equipo o al sistema."
+      : "Métrica de exposición: una valoración alta aumenta severidad porque indica más fricción o riesgo.";
+
+  return (
+    <HelpTooltip
+      title={`${metric.id} · ${metric.name}`}
+      description={metric.helpText}
+      ariaLabel={`Ayuda contextual de ${metric.id}`}
+      testId={`metric-${metric.id}-help`}
+      side="left"
+    >
+      <span className="text-background/80">
+        Modo simple: bajo, medio o alto según la rúbrica visible en la tarjeta.
+      </span>
+      <span className="text-background/80">{protectiveCopy}</span>
+      <span className="text-background/80">{metric.methodologicalCaveat}</span>
+    </HelpTooltip>
+  );
+}
+
 function MetricCard({
   metric,
   value,
@@ -332,22 +356,25 @@ function MetricCard({
               {metric.description}
             </CardDescription>
           </div>
-          <Field orientation="horizontal" className="w-fit">
-            <Checkbox
-              id={`metric-${metric.id}-unavailable`}
-              data-testid={`metric-${metric.id}-unavailable`}
-              checked={!value.available}
-              onCheckedChange={(checked) =>
-                onChange({ available: checked !== true })
-              }
-            />
-            <FieldLabel
-              htmlFor={`metric-${metric.id}-unavailable`}
-              className="text-sm"
-            >
-              No disponible
-            </FieldLabel>
-          </Field>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <MetricHelpTooltip metric={metric} />
+            <Field orientation="horizontal" className="w-fit">
+              <Checkbox
+                id={`metric-${metric.id}-unavailable`}
+                data-testid={`metric-${metric.id}-unavailable`}
+                checked={!value.available}
+                onCheckedChange={(checked) =>
+                  onChange({ available: checked !== true })
+                }
+              />
+              <FieldLabel
+                htmlFor={`metric-${metric.id}-unavailable`}
+                className="text-sm"
+              >
+                No disponible
+              </FieldLabel>
+            </Field>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-5">

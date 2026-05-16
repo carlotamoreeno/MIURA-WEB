@@ -10,7 +10,11 @@ import {
 import { PreloadedExampleScorecard } from "@/components/miura/preloaded-example-scorecard";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { sampleMiuraEvaluationId } from "@/lib/miura/domain";
+import {
+  MIURA_DISCLAIMERS,
+  MIURA_FORMULA_HELP,
+  sampleMiuraEvaluationId,
+} from "@/lib/miura/domain";
 
 type EvaluationRouteProps = {
   params: Promise<{ id: string }>;
@@ -38,6 +42,11 @@ const scorecardViews = [
   },
 ];
 
+const formulaHelpItems = MIURA_FORMULA_HELP.map((help) => ({
+  title: help.title,
+  description: `${help.summary} ${help.formula}`,
+}));
+
 export default async function ScorecardPage({ params }: EvaluationRouteProps) {
   const { id } = await params;
   const showsPreloadedExample = id === sampleMiuraEvaluationId;
@@ -50,7 +59,12 @@ export default async function ScorecardPage({ params }: EvaluationRouteProps) {
         description="La ruta de resultados queda disponible para que las tareas de cálculo y recomendaciones conecten la severidad, cobertura y supuestos sin cambiar la estructura de navegación."
       >
         <div className="flex flex-wrap items-center gap-3">
-          <Badge variant="secondary">Evaluación: {id}</Badge>
+          <Badge
+            variant="secondary"
+            className="h-auto min-h-5 max-w-full min-w-0 justify-start whitespace-normal text-left leading-5 wrap-anywhere"
+          >
+            Evaluación: {id}
+          </Badge>
           <Button asChild variant="outline" className="w-fit">
             <Link href={`/evaluacion/${id}/informe`}>
               Ver informe demo
@@ -66,6 +80,10 @@ export default async function ScorecardPage({ params }: EvaluationRouteProps) {
         ) : (
           <>
             <InfoTileGrid items={scorecardViews} />
+            <div className="space-y-3">
+              <h2 className="text-xl font-semibold">Ayuda de fórmulas</h2>
+              <InfoTileGrid items={formulaHelpItems} />
+            </div>
             <MvpNotice title="Sin cálculo todavía">
               Esta tarea no implementa la scorecard final, escenarios ni
               monetización. La vista completa de resultados se añadirá en
@@ -73,6 +91,11 @@ export default async function ScorecardPage({ params }: EvaluationRouteProps) {
             </MvpNotice>
           </>
         )}
+        <MvpNotice title="Disclaimers de interpretación">
+          <span className="block">{MIURA_DISCLAIMERS.preliminary}</span>
+          <span className="mt-2 block">{MIURA_DISCLAIMERS.economic}</span>
+          <span className="mt-2 block">{MIURA_DISCLAIMERS.coverage}</span>
+        </MvpNotice>
       </section>
     </>
   );
