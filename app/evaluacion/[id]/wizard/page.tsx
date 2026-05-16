@@ -1,14 +1,8 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { ArrowRightIcon } from "lucide-react";
 
-import {
-  InfoTileGrid,
-  MvpNotice,
-  PageIntro,
-} from "@/components/miura/page-structure";
+import { PageIntro } from "@/components/miura/page-structure";
 import { EvaluationSessionSummary } from "@/components/miura/evaluation-session-summary";
-import { Button } from "@/components/ui/button";
+import { MetricWizard } from "@/components/miura/metric-wizard";
 import { Badge } from "@/components/ui/badge";
 
 type EvaluationRouteProps = {
@@ -19,24 +13,6 @@ export const metadata: Metadata = {
   title: "Wizard de evaluación",
 };
 
-const pillarSteps = [
-  {
-    title: "Código/arquitectura",
-    description:
-      "Paso reservado para las métricas C1-C4 y sus ayudas contextuales.",
-  },
-  {
-    title: "Documentación/conocimiento",
-    description:
-      "Paso reservado para las métricas D1-D4, fuentes y evidencia opcional.",
-  },
-  {
-    title: "Personas/proceso",
-    description:
-      "Paso reservado para las métricas P1-P4 y señales de coordinación.",
-  },
-];
-
 export default async function WizardPage({ params }: EvaluationRouteProps) {
   const { id } = await params;
 
@@ -45,27 +21,21 @@ export default async function WizardPage({ params }: EvaluationRouteProps) {
       <PageIntro
         eyebrow="Wizard"
         title="Wizard de evaluación"
-        description="La arquitectura de navegación ya separa el recorrido por pilares. La captura de métricas, modo simple/avanzado y validación se implementarán cuando existan schemas y catálogo MIURA."
+        description="Completa las métricas MIURA por pilares. Puedes usar una lectura simple bajo/medio/alto, añadir evidencia avanzada o marcar una métrica como no disponible para reflejar la cobertura real."
       >
-        <div className="flex flex-wrap items-center gap-3">
-          <Badge variant="secondary">Evaluación: {id}</Badge>
-          <Button asChild variant="outline" className="w-fit">
-            <Link href={`/evaluacion/${id}/scorecard`}>
-              Ir a scorecard demo
-              <ArrowRightIcon />
-            </Link>
-          </Button>
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
+          <Badge
+            variant="secondary"
+            className="h-auto min-h-5 max-w-full min-w-0 justify-start whitespace-normal text-left leading-5 wrap-anywhere"
+          >
+            Evaluación: {id}
+          </Badge>
         </div>
       </PageIntro>
 
       <section className="mx-auto w-full max-w-6xl space-y-5 px-4 py-10 sm:px-6 lg:px-8">
         <EvaluationSessionSummary evaluationId={id} />
-        <InfoTileGrid items={pillarSteps} />
-        <MvpNotice title="Progreso orientativo">
-          El indicador global muestra el paso del recorrido, no cobertura real.
-          La cobertura por pilar pertenece a las tareas de motor MIURA y wizard
-          funcional.
-        </MvpNotice>
+        <MetricWizard evaluationId={id} />
       </section>
     </>
   );

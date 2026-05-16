@@ -6,6 +6,7 @@ import type {
   Project,
   Workspace,
 } from "@/lib/miura/schemas";
+import { miuraLocalExportSchema } from "@/lib/miura/schemas";
 
 type TemporaryEvaluationSessionSource = "draft" | "example";
 
@@ -53,9 +54,29 @@ function getTemporaryEvaluationSession(evaluationId: string) {
   return temporaryEvaluations.get(evaluationId);
 }
 
+function updateTemporaryEvaluationSession(evaluation: Evaluation) {
+  const currentSession = temporaryEvaluations.get(evaluation.id);
+
+  if (currentSession === undefined) {
+    return undefined;
+  }
+
+  const localExport = miuraLocalExportSchema.parse({
+    ...currentSession.localExport,
+    exportedAt: evaluation.updatedAt,
+    evaluations: currentSession.localExport.evaluations.map(
+      (storedEvaluation) =>
+        storedEvaluation.id === evaluation.id ? evaluation : storedEvaluation,
+    ),
+  });
+
+  return setTemporaryEvaluationSession(localExport, currentSession.source);
+}
+
 export {
   getTemporaryEvaluationSession,
   setTemporaryEvaluationSession,
+  updateTemporaryEvaluationSession,
   type TemporaryEvaluationSession,
   type TemporaryEvaluationSessionSource,
 };
