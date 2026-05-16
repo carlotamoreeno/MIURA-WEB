@@ -7,6 +7,7 @@ import {
   MvpNotice,
   PageIntro,
 } from "@/components/miura/page-structure";
+import { EvaluationSessionSummary } from "@/components/miura/evaluation-session-summary";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -58,6 +59,7 @@ export default async function WizardPage({ params }: EvaluationRouteProps) {
       </PageIntro>
 
       <section className="mx-auto w-full max-w-6xl space-y-5 px-4 py-10 sm:px-6 lg:px-8">
+        <EvaluationSessionSummary evaluationId={id} />
         <InfoTileGrid items={pillarSteps} />
         <MvpNotice title="Progreso orientativo">
           El indicador global muestra el paso del recorrido, no cobertura real.
