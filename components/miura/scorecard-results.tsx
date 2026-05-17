@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   AlertCircleIcon,
   ArrowRightIcon,
-  BarChart3Icon,
   CheckCircle2Icon,
   ClipboardListIcon,
   DatabaseIcon,
@@ -17,6 +16,7 @@ import {
   SeverityIndicator,
   type SeverityLevel,
 } from "@/components/miura/severity-indicator";
+import { ScenarioPanel } from "@/components/miura/scenario-panel";
 import {
   buildMiuraRecommendationSet,
   buildPreloadedMiuraExampleSnapshot,
@@ -169,12 +169,6 @@ function formatScore(value: number) {
 
 function formatPercent(value: number) {
   return `${Math.round(value * 100)}%`;
-}
-
-function formatHours(value: number) {
-  return new Intl.NumberFormat("es-ES", {
-    maximumFractionDigits: 1,
-  }).format(value);
 }
 
 function pillarDefinition(pillar: Pillar) {
@@ -471,9 +465,6 @@ function PartialCoverageAlert({
 function ExecutiveView({ data }: { data: ScorecardData }) {
   const { calculationResult, recommendationSet, project, evaluation } = data;
   const visualConfig = recommendationVisualConfig[recommendationSet.level];
-  const centralScenario = calculationResult.scenarios.find(
-    (scenario) => scenario.scenario === "central",
-  );
 
   return (
     <div className="space-y-5">
@@ -580,69 +571,11 @@ function ExecutiveView({ data }: { data: ScorecardData }) {
         </div>
 
         <aside className="space-y-4">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center gap-2">
-                <BarChart3Icon
-                  aria-hidden="true"
-                  className="text-primary size-4"
-                />
-                <CardTitle>Capacidad perdida</CardTitle>
-              </div>
-              <CardDescription>
-                Resumen compacto del escenario central. El panel completo queda
-                para TASK-014.
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              {centralScenario === undefined ? (
-                <p className="text-muted-foreground leading-6">
-                  No hay escenario central disponible para esta evaluación.
-                </p>
-              ) : (
-                <>
-                  <div>
-                    <p className="text-muted-foreground text-xs">
-                      Horas al mes
-                    </p>
-                    <p className="text-3xl font-semibold">
-                      {formatHours(centralScenario.lostHoursMonthly)} h
-                    </p>
-                  </div>
-                  <div className="grid gap-3 text-sm">
-                    <div className="flex justify-between gap-3">
-                      <span className="text-muted-foreground">λ central</span>
-                      <span className="font-medium">
-                        {formatScore(centralScenario.lambda)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between gap-3">
-                      <span className="text-muted-foreground">CF central</span>
-                      <span className="font-medium">
-                        {centralScenario.CF.toFixed(4)}
-                      </span>
-                    </div>
-                    <div className="flex justify-between gap-3">
-                      <span className="text-muted-foreground">
-                        Horizonte total
-                      </span>
-                      <span className="font-medium">
-                        {formatHours(centralScenario.lostHoursTotal)} h
-                      </span>
-                    </div>
-                  </div>
-                </>
-              )}
-              <Alert className="border-info-border bg-info-bg text-info-foreground">
-                <InfoIcon aria-hidden="true" />
-                <AlertTitle>Horas antes que euros</AlertTitle>
-                <AlertDescription>
-                  Esta vista no muestra PWC, principal ni break-even. Esas
-                  salidas económicas se desarrollan en TASK-014.
-                </AlertDescription>
-              </Alert>
-            </CardContent>
-          </Card>
+          <ScenarioPanel
+            calculationResult={calculationResult}
+            project={project}
+            evaluation={evaluation}
+          />
 
           <Card>
             <CardHeader>

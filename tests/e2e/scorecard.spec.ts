@@ -97,6 +97,31 @@ test.describe("MIURA scorecard", () => {
     await expect(
       page.getByTestId("scorecard-executive-coverage-code_architecture"),
     ).toContainText("Cobertura 0.75");
+
+    const scenarioPanel = page.getByTestId("scenario-panel");
+
+    await expect(scenarioPanel).toContainText("Fricción, capacidad y coste");
+    await expect(
+      scenarioPanel.getByTestId("scenario-card-conservative"),
+    ).toContainText("Conservador");
+    await expect(
+      scenarioPanel.getByTestId("scenario-card-central"),
+    ).toContainText("149,1 h/mes");
+    await expect(
+      scenarioPanel.getByTestId("scenario-card-central"),
+    ).toContainText("1789,2 h en 12 meses");
+    await expect(
+      scenarioPanel.getByTestId("scenario-card-central"),
+    ).toContainText(/75\.146,4/);
+    await expect(
+      scenarioPanel.getByTestId("scenario-card-tensioned"),
+    ).toContainText("Tensionado");
+    await expect(scenarioPanel.getByTestId("scenario-economics")).toContainText(
+      /21\.840/,
+    );
+    await expect(scenarioPanel.getByTestId("scenario-economics")).toContainText(
+      "3,5 meses",
+    );
   });
 
   test("renders executive and technical tabs for a generated evaluation", async ({
@@ -108,7 +133,21 @@ test.describe("MIURA scorecard", () => {
 
     await expect(page.getByRole("tab", { name: "Ejecutiva" })).toBeVisible();
     await expect(page.getByText("Lectura ejecutiva")).toBeVisible();
-    await expect(page.getByText("Capacidad perdida")).toBeVisible();
+
+    const scenarioPanel = page.getByTestId("scenario-panel");
+
+    await expect(scenarioPanel).toContainText("Lectura en horas");
+    await expect(
+      scenarioPanel.getByTestId("scenario-card-conservative"),
+    ).toBeVisible();
+    await expect(
+      scenarioPanel.getByTestId("scenario-card-central"),
+    ).toBeVisible();
+    await expect(
+      scenarioPanel.getByTestId("scenario-card-tensioned"),
+    ).toBeVisible();
+    await expect(scenarioPanel.getByText(/Coste proyectado/)).toHaveCount(0);
+    await expect(scenarioPanel.getByText(/€/)).toHaveCount(0);
 
     await page.getByRole("tab", { name: "Técnica" }).click();
     await expect(page.getByText("Pesos y cobertura")).toBeVisible();
@@ -132,6 +171,19 @@ test.describe("MIURA scorecard", () => {
     await expect(
       page.getByText(/no presenta PWC, principal ni break-even/i),
     ).toBeVisible();
+
+    const scenarioPanel = page.getByTestId("scenario-panel");
+
+    await expect(scenarioPanel).toContainText(
+      "Monetización bloqueada por cobertura",
+    );
+    await expect(scenarioPanel).toContainText(
+      "bloquea PWC, principal y break-even",
+    );
+    await expect(
+      scenarioPanel.getByTestId("scenario-card-central"),
+    ).toContainText(/h\/mes/);
+    await expect(scenarioPanel.getByText(/Coste proyectado/)).toHaveCount(0);
   });
 
   test("does not overflow horizontally on mobile", async ({ page }) => {
