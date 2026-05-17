@@ -67,6 +67,11 @@ test.describe("MIURA evaluation creation", () => {
     await expect(page.getByText("0.80", { exact: true })).toBeVisible();
     await expect(page.getByText("0.71", { exact: true })).toBeVisible();
     await expect(page.getByText("Nivel recomendado: intervenir")).toBeVisible();
-    await expect(page.getByText(/Cobertura 0.75/)).toHaveCount(3);
+    await expect(
+      page.getByText("Pilar dominante: Personas/proceso"),
+    ).toBeVisible();
+    await expect(
+      page.getByTestId("scorecard-executive-coverage-code_architecture"),
+    ).toContainText("Cobertura 0.75");
   });
 });
