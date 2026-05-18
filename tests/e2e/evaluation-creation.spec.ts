@@ -48,7 +48,7 @@ test.describe("MIURA evaluation creation", () => {
       page.getByRole("heading", { level: 1, name: "Wizard de evaluación" }),
     ).toBeVisible();
     await expect(page.getByText("Portal operativo")).toBeVisible();
-    await expect(page.getByText("Borrador local")).toBeVisible();
+    await expect(page.getByText("Guardado local")).toBeVisible();
     await expect(page.getByText("900 h")).toBeVisible();
     await expect(page.getByText("9 meses")).toBeVisible();
   });

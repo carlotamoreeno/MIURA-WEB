@@ -1,9 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import { ClockIcon, DatabaseIcon } from "lucide-react";
 
-import { getTemporaryEvaluationSession } from "@/lib/miura/session/evaluation-session";
+import {
+  getTemporaryEvaluationSession,
+  type TemporaryEvaluationSession,
+} from "@/lib/miura/session/evaluation-session";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -15,20 +18,48 @@ import {
 } from "@/components/ui/card";
 
 function EvaluationSessionSummary({ evaluationId }: { evaluationId: string }) {
-  const session = useMemo(
-    () => getTemporaryEvaluationSession(evaluationId),
-    [evaluationId],
-  );
+  const [loaded, setLoaded] = useState(false);
+  const [session, setSession] = useState<
+    TemporaryEvaluationSession | undefined
+  >();
+
+  useEffect(() => {
+    let active = true;
+
+    queueMicrotask(() => {
+      if (!active) return;
+
+      setSession(getTemporaryEvaluationSession(evaluationId));
+      setLoaded(true);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [evaluationId]);
+
+  if (!loaded) {
+    return (
+      <Alert>
+        <ClockIcon aria-hidden="true" />
+        <AlertTitle>Cargando evaluación local</AlertTitle>
+        <AlertDescription>
+          MIURA está comprobando si existe un borrador guardado en este
+          navegador.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   if (session === undefined) {
     return (
       <Alert>
         <ClockIcon aria-hidden="true" />
-        <AlertTitle>Borrador temporal no disponible</AlertTitle>
+        <AlertTitle>Evaluación local no disponible</AlertTitle>
         <AlertDescription>
-          Esta versión mantiene la evaluación creada en memoria de sesión. Si
-          recargaste la página o abriste el enlace en otra pestaña, crea de
-          nuevo el borrador hasta que TASK-015 añada persistencia local.
+          No se ha encontrado una evaluación guardada con este identificador en
+          el navegador. Crea una evaluación nueva, carga el ejemplo o importa un
+          JSON válido desde ajustes locales.
         </AlertDescription>
       </Alert>
     );
@@ -44,10 +75,27 @@ function EvaluationSessionSummary({ evaluationId }: { evaluationId: string }) {
               {session.workspace.name} · {session.project.methodology}
             </CardDescription>
           </div>
-          <Badge variant="secondary">Borrador local</Badge>
+          <Badge
+            variant={
+              session.storageMode === "session_fallback"
+                ? "destructive"
+                : "secondary"
+            }
+          >
+            {session.storageMode === "session_fallback"
+              ? "Modo sesión"
+              : "Guardado local"}
+          </Badge>
         </div>
       </CardHeader>
       <CardContent>
+        {session.storageWarning !== undefined && (
+          <Alert className="border-info-border bg-info-bg text-info-foreground mb-5">
+            <DatabaseIcon aria-hidden="true" />
+            <AlertTitle>Persistencia limitada</AlertTitle>
+            <AlertDescription>{session.storageWarning}</AlertDescription>
+          </Alert>
+        )}
         <dl className="grid gap-4 text-sm sm:grid-cols-3">
           <div className="space-y-1">
             <dt className="text-muted-foreground">Evaluación</dt>
@@ -72,9 +120,8 @@ function EvaluationSessionSummary({ evaluationId }: { evaluationId: string }) {
             className="text-primary mt-0.5 size-4 shrink-0"
           />
           <p className="text-muted-foreground leading-6">
-            Este handoff es temporal y no escribe en Supabase ni en APIs. La
-            persistencia en navegador, exportación e importación quedan para
-            TASK-015.
+            Esta evaluación se gestiona en el navegador. No se escribe en
+            Supabase, no se envía a APIs y no requiere cuenta de usuario.
           </p>
         </div>
       </CardContent>

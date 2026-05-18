@@ -7,8 +7,15 @@ import type {
   Workspace,
 } from "@/lib/miura/schemas";
 import { miuraLocalExportSchema } from "@/lib/miura/schemas";
+import {
+  latestEvaluationFromLocalExport,
+  readMiuraLocalStore,
+  updateMiuraLocalEvaluation,
+  upsertMiuraLocalExport,
+  type MiuraLocalStoreMode,
+} from "./local-store";
 
-type TemporaryEvaluationSessionSource = "draft" | "example";
+type TemporaryEvaluationSessionSource = "draft" | "example" | "local";
 
 type TemporaryEvaluationSession = {
   source: TemporaryEvaluationSessionSource;
@@ -16,6 +23,8 @@ type TemporaryEvaluationSession = {
   workspace: Workspace;
   project: Project;
   evaluation: Evaluation;
+  storageMode: MiuraLocalStoreMode;
+  storageWarning?: string;
 };
 
 const temporaryEvaluations = new Map<string, TemporaryEvaluationSession>();
@@ -37,12 +46,67 @@ function setTemporaryEvaluationSession(
   const workspace = firstOrThrow(localExport.workspaces, "organización");
   const project = firstOrThrow(localExport.projects, "proyecto");
   const evaluation = firstOrThrow(localExport.evaluations, "evaluación");
+  const storeState = upsertMiuraLocalExport(localExport);
+  const session = {
+    source,
+    localExport: storeState.localExport ?? localExport,
+    workspace,
+    project,
+    evaluation,
+    storageMode: storeState.mode,
+    storageWarning: storeState.warning,
+  } satisfies TemporaryEvaluationSession;
+
+  temporaryEvaluations.set(evaluation.id, session);
+
+  return session;
+}
+
+function sessionFromLocalExport({
+  localExport,
+  evaluationId,
+  source,
+  storageMode,
+  storageWarning,
+}: {
+  localExport: MiuraLocalExport;
+  evaluationId: string;
+  source: TemporaryEvaluationSessionSource;
+  storageMode: MiuraLocalStoreMode;
+  storageWarning?: string;
+}) {
+  const evaluation = localExport.evaluations.find(
+    (storedEvaluation) => storedEvaluation.id === evaluationId,
+  );
+
+  if (evaluation === undefined) {
+    return undefined;
+  }
+
+  const project = localExport.projects.find(
+    (storedProject) => storedProject.id === evaluation.projectId,
+  );
+
+  if (project === undefined) {
+    return undefined;
+  }
+
+  const workspace = localExport.workspaces.find(
+    (storedWorkspace) => storedWorkspace.id === project.workspaceId,
+  );
+
+  if (workspace === undefined) {
+    return undefined;
+  }
+
   const session = {
     source,
     localExport,
     workspace,
     project,
     evaluation,
+    storageMode,
+    storageWarning,
   } satisfies TemporaryEvaluationSession;
 
   temporaryEvaluations.set(evaluation.id, session);
@@ -51,11 +115,59 @@ function setTemporaryEvaluationSession(
 }
 
 function getTemporaryEvaluationSession(evaluationId: string) {
-  return temporaryEvaluations.get(evaluationId);
+  const storeState = readMiuraLocalStore();
+
+  if (storeState.localExport !== undefined) {
+    return sessionFromLocalExport({
+      localExport: storeState.localExport,
+      evaluationId,
+      source: "local",
+      storageMode: storeState.mode,
+      storageWarning: storeState.warning,
+    });
+  }
+
+  if (storeState.mode === "session_fallback") {
+    return temporaryEvaluations.get(evaluationId);
+  }
+
+  return undefined;
+}
+
+function getLatestTemporaryEvaluationSession() {
+  const storeState = readMiuraLocalStore();
+  const latestEvaluation =
+    storeState.localExport === undefined
+      ? undefined
+      : latestEvaluationFromLocalExport(storeState.localExport);
+
+  if (storeState.localExport !== undefined && latestEvaluation !== undefined) {
+    return sessionFromLocalExport({
+      localExport: storeState.localExport,
+      evaluationId: latestEvaluation.id,
+      source: "local",
+      storageMode: storeState.mode,
+      storageWarning: storeState.warning,
+    });
+  }
+
+  if (storeState.mode !== "session_fallback") {
+    return undefined;
+  }
+
+  return [...temporaryEvaluations.values()].sort(
+    (left, right) =>
+      Date.parse(right.evaluation.updatedAt) -
+      Date.parse(left.evaluation.updatedAt),
+  )[0];
+}
+
+function clearTemporaryEvaluationSessions() {
+  temporaryEvaluations.clear();
 }
 
 function updateTemporaryEvaluationSession(evaluation: Evaluation) {
-  const currentSession = temporaryEvaluations.get(evaluation.id);
+  const currentSession = getTemporaryEvaluationSession(evaluation.id);
 
   if (currentSession === undefined) {
     return undefined;
@@ -69,11 +181,23 @@ function updateTemporaryEvaluationSession(evaluation: Evaluation) {
         storedEvaluation.id === evaluation.id ? evaluation : storedEvaluation,
     ),
   });
+  const storeState = updateMiuraLocalEvaluation(evaluation);
+  const persistedLocalExport = storeState?.localExport ?? localExport;
 
-  return setTemporaryEvaluationSession(localExport, currentSession.source);
+  const updatedSession = sessionFromLocalExport({
+    localExport: persistedLocalExport,
+    evaluationId: evaluation.id,
+    source: currentSession.source,
+    storageMode: storeState?.mode ?? currentSession.storageMode,
+    storageWarning: storeState?.warning ?? currentSession.storageWarning,
+  });
+
+  return updatedSession;
 }
 
 export {
+  clearTemporaryEvaluationSessions,
+  getLatestTemporaryEvaluationSession,
   getTemporaryEvaluationSession,
   setTemporaryEvaluationSession,
   updateTemporaryEvaluationSession,

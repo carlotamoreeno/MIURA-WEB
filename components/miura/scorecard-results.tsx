@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircleIcon,
@@ -80,6 +80,9 @@ type ScorecardData = {
 };
 
 type ScorecardState =
+  | {
+      status: "loading";
+    }
   | {
       status: "ready";
       data: ScorecardData;
@@ -896,17 +899,18 @@ function MissingScorecard({ evaluationId }: { evaluationId: string }) {
       <CardHeader>
         <div className="flex items-center gap-2">
           <DatabaseIcon aria-hidden="true" className="text-primary size-4" />
-          <CardTitle>Borrador temporal no disponible</CardTitle>
+          <CardTitle>Evaluación local no disponible</CardTitle>
         </div>
         <CardDescription className="leading-6">
-          No hay una evaluación temporal para {evaluationId}. Esta versión aún
-          no persiste datos tras recargar o abrir otra pestaña.
+          No hay una evaluación local para {evaluationId}. Revisa si se ha
+          borrado el almacenamiento local o importa un JSON válido desde ajustes
+          locales.
         </CardDescription>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-muted-foreground max-w-2xl leading-6">
-          Crea una evaluación nueva o carga el ejemplo reproducible hasta que
-          TASK-015 añada persistencia local durable.
+          Crea una evaluación nueva, carga el ejemplo reproducible o importa una
+          evaluación guardada previamente.
         </p>
         <Button asChild className="w-fit">
           <Link href="/evaluacion/nueva">
@@ -946,10 +950,36 @@ function ScorecardHeader({ data }: { data: ScorecardData }) {
 }
 
 function ScorecardResults({ evaluationId }: ScorecardResultsProps) {
-  const scorecardState = useMemo(
-    () => resolveScorecardData(evaluationId),
-    [evaluationId],
-  );
+  const [scorecardState, setScorecardState] = useState<ScorecardState>({
+    status: "loading",
+  });
+
+  useEffect(() => {
+    let active = true;
+
+    queueMicrotask(() => {
+      if (!active) return;
+
+      setScorecardState(resolveScorecardData(evaluationId));
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [evaluationId]);
+
+  if (scorecardState.status === "loading") {
+    return (
+      <Alert>
+        <DatabaseIcon aria-hidden="true" />
+        <AlertTitle>Cargando scorecard local</AlertTitle>
+        <AlertDescription>
+          MIURA está recuperando y validando la evaluación guardada en este
+          navegador.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   if (scorecardState.status === "missing") {
     return (

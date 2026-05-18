@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -22,9 +23,12 @@ import {
   isNavigationItemActive,
   knowledgeNavigation,
   primaryNavigation,
+  demoEvaluationId,
   type MiuraNavigationItem,
   type MiuraRouteKey,
 } from "@/lib/miura/navigation";
+import { getLatestTemporaryEvaluationSession } from "@/lib/miura/session/evaluation-session";
+import { MIURA_LOCAL_STORE_EVENT } from "@/lib/miura/session/local-store";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -113,8 +117,54 @@ function NavigationGroup({
 
 function MiuraAppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const [activeEvaluationId, setActiveEvaluationId] = useState<string>();
   const progress = getEvaluationProgress(pathname);
   const routeTitle = getRouteTitle(pathname);
+  const evaluationNavigation = useMemo(() => {
+    const evaluationId = activeEvaluationId ?? demoEvaluationId;
+
+    return primaryNavigation.map((item) => {
+      if (item.key === "wizard") {
+        return {
+          ...item,
+          href: `/evaluacion/${evaluationId}/wizard`,
+        };
+      }
+
+      if (item.key === "scorecard") {
+        return {
+          ...item,
+          href: `/evaluacion/${evaluationId}/scorecard`,
+        };
+      }
+
+      if (item.key === "report") {
+        return {
+          ...item,
+          href: `/evaluacion/${evaluationId}/informe`,
+        };
+      }
+
+      return item;
+    });
+  }, [activeEvaluationId]);
+
+  useEffect(() => {
+    function syncActiveEvaluation() {
+      setActiveEvaluationId(
+        getLatestTemporaryEvaluationSession()?.evaluation.id,
+      );
+    }
+
+    syncActiveEvaluation();
+    window.addEventListener(MIURA_LOCAL_STORE_EVENT, syncActiveEvaluation);
+    window.addEventListener("storage", syncActiveEvaluation);
+
+    return () => {
+      window.removeEventListener(MIURA_LOCAL_STORE_EVENT, syncActiveEvaluation);
+      window.removeEventListener("storage", syncActiveEvaluation);
+    };
+  }, []);
 
   return (
     <TooltipProvider>
@@ -148,7 +198,7 @@ function MiuraAppShell({ children }: { children: React.ReactNode }) {
             </Link>
           </SidebarHeader>
           <SidebarContent>
-            <NavigationGroup label="Evaluación" items={primaryNavigation} />
+            <NavigationGroup label="Evaluación" items={evaluationNavigation} />
             <SidebarSeparator />
             <NavigationGroup label="Conocimiento" items={knowledgeNavigation} />
           </SidebarContent>

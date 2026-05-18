@@ -23,7 +23,7 @@ type EvaluationProgressState = {
   value: number;
 };
 
-const demoEvaluationId = "demo";
+const demoEvaluationId = "evaluation-demo";
 
 const miuraNavigationItems = {
   home: {

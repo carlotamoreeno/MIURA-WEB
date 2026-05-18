@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircleIcon,
@@ -607,23 +607,22 @@ function MissingSessionAlert() {
   return (
     <Alert>
       <AlertCircleIcon aria-hidden="true" />
-      <AlertTitle>Borrador temporal no disponible</AlertTitle>
+      <AlertTitle>Evaluación local no disponible</AlertTitle>
       <AlertDescription>
-        Esta versión mantiene la evaluación creada en memoria de sesión. Si
-        recargaste la página o abriste el enlace en otra pestaña, crea de nuevo
-        el borrador hasta que TASK-015 añada persistencia local.
+        No se ha encontrado una evaluación guardada con este identificador en el
+        navegador. Crea una evaluación nueva, carga el ejemplo o importa un JSON
+        válido desde ajustes locales.
       </AlertDescription>
     </Alert>
   );
 }
 
 function MetricWizard({ evaluationId }: MetricWizardProps) {
+  const [loaded, setLoaded] = useState(false);
   const [session, setSession] = useState<
     TemporaryEvaluationSession | undefined
-  >(() => getTemporaryEvaluationSession(evaluationId));
-  const [inputs, setInputs] = useState<MetricWizardInput[]>(() =>
-    session === undefined ? [] : buildMetricWizardInputs(session.evaluation),
-  );
+  >();
+  const [inputs, setInputs] = useState<MetricWizardInput[]>([]);
   const [activePillarIndex, setActivePillarIndex] = useState(0);
   const [metricErrors, setMetricErrors] = useState<MetricWizardMetricErrors>(
     {},
@@ -636,6 +635,40 @@ function MetricWizard({ evaluationId }: MetricWizardProps) {
   const currentPillar = MIURA_PILLARS[activePillarIndex] ?? MIURA_PILLARS[0];
   const readyForScorecard =
     session?.evaluation.status === "ready_for_scorecard";
+
+  useEffect(() => {
+    let active = true;
+
+    queueMicrotask(() => {
+      if (!active) return;
+
+      const nextSession = getTemporaryEvaluationSession(evaluationId);
+
+      setSession(nextSession);
+      setInputs(
+        nextSession === undefined
+          ? []
+          : buildMetricWizardInputs(nextSession.evaluation),
+      );
+      setLoaded(true);
+    });
+
+    return () => {
+      active = false;
+    };
+  }, [evaluationId]);
+
+  if (!loaded) {
+    return (
+      <Alert>
+        <AlertCircleIcon aria-hidden="true" />
+        <AlertTitle>Cargando evaluación local</AlertTitle>
+        <AlertDescription>
+          MIURA está recuperando los datos guardados en este navegador.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
   if (session === undefined || currentPillar === undefined) {
     return <MissingSessionAlert />;
@@ -685,7 +718,7 @@ function MetricWizard({ evaluationId }: MetricWizardProps) {
 
     if (updatedSession === undefined) {
       setWizardMessage(
-        "No se ha podido actualizar el borrador temporal. Crea de nuevo la evaluación si la sesión se perdió.",
+        "No se ha podido actualizar la evaluación local. Crea de nuevo la evaluación si la sesión se perdió.",
         "error",
       );
       return undefined;
@@ -751,6 +784,17 @@ function MetricWizard({ evaluationId }: MetricWizardProps) {
 
       <WizardMessage message={message} variant={messageVariant} />
 
+      {activeSession.storageWarning !== undefined && (
+        <Alert className="border-info-border bg-info-bg text-info-foreground">
+          <AlertCircleIcon aria-hidden="true" />
+          <AlertTitle>Persistencia limitada</AlertTitle>
+          <AlertDescription>
+            {activeSession.storageWarning} Si recargas la página, los cambios
+            podrían perderse.
+          </AlertDescription>
+        </Alert>
+      )}
+
       {readyForScorecard && (
         <Alert className="border-info-border bg-info-bg text-info-foreground">
           <CheckCircle2Icon aria-hidden="true" />
@@ -758,7 +802,7 @@ function MetricWizard({ evaluationId }: MetricWizardProps) {
           <AlertDescription className="flex flex-col gap-3 leading-6 sm:flex-row sm:items-center sm:justify-between">
             <span>
               Las 12 métricas están respondidas o marcadas como no disponibles.
-              La scorecard final se implementa en TASK-013/TASK-014.
+              La evaluación está lista para consultar resultados y escenarios.
             </span>
             <Button asChild size="sm" className="w-fit">
               <Link href={`/evaluacion/${evaluationId}/scorecard`}>
@@ -795,8 +839,8 @@ function MetricWizard({ evaluationId }: MetricWizardProps) {
 
           <div className="border-border bg-background flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="text-muted-foreground text-sm leading-6">
-              El guardado actualiza solo el borrador temporal de esta sesión. La
-              persistencia tras recarga queda para TASK-015.
+              El guardado actualiza la evaluación local de este navegador. Si el
+              almacenamiento falla, MIURA lo mantendrá solo en la sesión actual.
             </div>
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
               <Button
