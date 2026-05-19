@@ -18,9 +18,6 @@ import {
 } from "@/components/miura/severity-indicator";
 import { ScenarioPanel } from "@/components/miura/scenario-panel";
 import {
-  buildMiuraRecommendationSet,
-  buildPreloadedMiuraExampleSnapshot,
-  calculateMiuraEvaluation,
   getMetricsByPillar,
   MIURA_DISCLAIMERS,
   MIURA_DS_WEIGHTS,
@@ -28,7 +25,6 @@ import {
   MIURA_PILLARS,
   MINIMUM_ECONOMIC_COVERAGE,
   normalizeSimpleMetricValue,
-  sampleMiuraEvaluationId,
 } from "@/lib/miura/domain";
 import {
   PILLARS,
@@ -37,14 +33,16 @@ import {
   type MetricId,
   type MetricValue,
   type Pillar,
-  type Project,
   type RecommendationLevel,
   type RecommendationSet,
   type Scenario,
   type SimpleLevel,
-  type Workspace,
 } from "@/lib/miura/schemas";
-import { getTemporaryEvaluationSession } from "@/lib/miura/session/evaluation-session";
+import {
+  resolveMiuraEvaluationResult,
+  type MiuraEvaluationResultData,
+  type MiuraEvaluationResultState,
+} from "@/lib/miura/session/evaluation-results";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -70,30 +68,13 @@ type ScorecardResultsProps = {
   evaluationId: string;
 };
 
-type ScorecardData = {
-  source: "session" | "example";
-  workspace: Workspace;
-  project: Project;
-  evaluation: Evaluation;
-  calculationResult: CalculationResult;
-  recommendationSet: RecommendationSet;
-};
+type ScorecardData = MiuraEvaluationResultData;
 
 type ScorecardState =
   | {
       status: "loading";
     }
-  | {
-      status: "ready";
-      data: ScorecardData;
-    }
-  | {
-      status: "missing";
-    }
-  | {
-      status: "error";
-      message: string;
-    };
+  | MiuraEvaluationResultState;
 
 type MetricTraceStatus = "observed" | "unavailable" | "missing";
 
@@ -281,65 +262,6 @@ function buildMetricTraceRows(
       } satisfies MetricTraceRow;
     }),
   );
-}
-
-function resolveScorecardData(evaluationId: string): ScorecardState {
-  try {
-    const temporarySession = getTemporaryEvaluationSession(evaluationId);
-
-    if (temporarySession !== undefined) {
-      const calculationResult = calculateMiuraEvaluation({
-        project: temporarySession.project,
-        evaluation: temporarySession.evaluation,
-      });
-      const recommendationSet = buildMiuraRecommendationSet(calculationResult);
-
-      return {
-        status: "ready",
-        data: {
-          source: "session",
-          workspace: temporarySession.workspace,
-          project: temporarySession.project,
-          evaluation: temporarySession.evaluation,
-          calculationResult,
-          recommendationSet,
-        },
-      };
-    }
-
-    if (evaluationId === sampleMiuraEvaluationId) {
-      const example = buildPreloadedMiuraExampleSnapshot();
-      const calculationResult = calculateMiuraEvaluation({
-        project: example.project,
-        evaluation: example.evaluation,
-      });
-      const recommendationSet = buildMiuraRecommendationSet(calculationResult);
-
-      return {
-        status: "ready",
-        data: {
-          source: "example",
-          workspace: example.workspace,
-          project: example.project,
-          evaluation: example.evaluation,
-          calculationResult,
-          recommendationSet,
-        },
-      };
-    }
-
-    return {
-      status: "missing",
-    };
-  } catch (error) {
-    return {
-      status: "error",
-      message:
-        error instanceof Error
-          ? error.message
-          : "No se ha podido calcular la scorecard MIURA.",
-    };
-  }
 }
 
 function ResultTile({
@@ -960,7 +882,7 @@ function ScorecardResults({ evaluationId }: ScorecardResultsProps) {
     queueMicrotask(() => {
       if (!active) return;
 
-      setScorecardState(resolveScorecardData(evaluationId));
+      setScorecardState(resolveMiuraEvaluationResult(evaluationId));
     });
 
     return () => {

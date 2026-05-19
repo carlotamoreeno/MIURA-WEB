@@ -179,3 +179,29 @@
     @apply font-sans;
   }
 }
+
+@media print {
+  @page {
+    margin: 14mm;
+  }
+
+  body {
+    background: white !important;
+  }
+
+  [data-sidebar="sidebar"],
+  [data-sidebar="rail"],
+  [data-sidebar="trigger"],
+  .miura-print-hidden {
+    display: none !important;
+  }
+
+  .miura-print-report {
+    color: black !important;
+  }
+
+  .miura-print-report a[href] {
+    color: inherit !important;
+    text-decoration: none !important;
+  }
+}

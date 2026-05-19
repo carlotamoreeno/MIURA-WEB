@@ -175,7 +175,10 @@ function MiuraAppShell({ children }: { children: React.ReactNode }) {
         >
           Saltar al contenido
         </a>
-        <Sidebar collapsible="icon" className="border-sidebar-border">
+        <Sidebar
+          collapsible="icon"
+          className="border-sidebar-border miura-print-hidden"
+        >
           <SidebarHeader className="gap-3 p-3">
             <Link
               href="/"
@@ -213,7 +216,7 @@ function MiuraAppShell({ children }: { children: React.ReactNode }) {
           <SidebarRail />
         </Sidebar>
         <SidebarInset>
-          <header className="bg-background/95 supports-backdrop-filter:bg-background/85 sticky top-0 z-20 border-b backdrop-blur">
+          <header className="bg-background/95 supports-backdrop-filter:bg-background/85 miura-print-hidden sticky top-0 z-20 border-b backdrop-blur">
             <div className="flex min-h-16 items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
               <div className="flex min-w-0 items-center gap-3">
                 <SidebarTrigger

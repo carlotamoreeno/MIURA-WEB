@@ -5,3 +5,4 @@ export * from "./help";
 export * from "./metric-wizard";
 export * from "./metrics";
 export * from "./recommendations";
+export * from "./report";

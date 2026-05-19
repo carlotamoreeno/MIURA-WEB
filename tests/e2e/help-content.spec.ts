@@ -37,7 +37,7 @@ test.describe("MIURA contextual help and disclaimers", () => {
       page.getByText("C1 · Esfuerzo de remediación observable"),
     ).toBeVisible();
     await expect(
-      page.getByText(/MIURA es un framework metodológico preliminar/i),
+      page.getByText(/MIURA es un framework metodológico preliminar/i).first(),
     ).toBeVisible();
     await expect(
       page.getByText(/no son contabilidad exacta/i).first(),
@@ -66,28 +66,34 @@ test.describe("MIURA contextual help and disclaimers", () => {
   });
 
   test("scorecard and report expose required disclaimers", async ({ page }) => {
-    await page.goto("/evaluacion/demo/scorecard");
+    await page.goto("/evaluacion/evaluation-demo/scorecard");
 
     await expect(
       page.getByRole("heading", { level: 1, name: "Scorecard MIURA" }),
     ).toBeVisible();
     await expect(
-      page.getByText(/MIURA es un framework metodológico preliminar/i),
+      page.getByText(/MIURA es un framework metodológico preliminar/i).first(),
     ).toBeVisible();
-    await expect(page.getByText(/no son contabilidad exacta/i)).toBeVisible();
-    await expect(page.getByText(/cobertura inferior al 50%/i)).toBeVisible();
+    await expect(
+      page.getByText(/no son contabilidad exacta/i).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByText(/cobertura inferior al 50%/i).first(),
+    ).toBeVisible();
 
-    await page.goto("/evaluacion/demo/informe");
+    await page.goto("/evaluacion/evaluation-demo/informe");
     await expect(
       page.getByRole("heading", { level: 1, name: "Informe exportable" }),
     ).toBeVisible();
     await expect(
-      page.getByText(/puede contener datos del proyecto/i),
+      page.getByText(/puede contener nombres, métricas, notas/i),
     ).toBeVisible();
     await expect(
-      page.getByText(/MIURA es un framework metodológico preliminar/i),
+      page.getByText(/MIURA es un framework metodológico preliminar/i).first(),
     ).toBeVisible();
-    await expect(page.getByText(/no son contabilidad exacta/i)).toBeVisible();
+    await expect(
+      page.getByText(/no son contabilidad exacta/i).first(),
+    ).toBeVisible();
   });
 
   test("dynamic scorecard and report badges do not overflow on mobile", async ({
