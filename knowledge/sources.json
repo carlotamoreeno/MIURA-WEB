@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "validatedOn": "2026-05-26",
+  "project": "MIURA Web App MVP 0.1",
+  "embedding": {
+    "model": "text-embedding-3-small",
+    "dimensions": 1536,
+    "defaultLanguage": "es"
+  },
+  "chunking": {
+    "targetTokens": 800,
+    "overlapTokens": 160,
+    "preserveHeadings": true,
+    "preserveFrontMatter": true
+  },
+  "sources": [
+    {
+      "id": "miura-prd",
+      "title": "PRD - MIURA Web App / MVP 0.1",
+      "sourceType": "local_control_document",
+      "language": "es",
+      "localPath": "PRD.md",
+      "status": "available",
+      "license": "project-internal",
+      "includeForDirectIngestion": false,
+      "generatedCorpusPaths": [
+        "knowledge/miura/fichas/00-alcance-y-disclaimers.md",
+        "knowledge/miura/fichas/01-pilares-metricas-rubricas.md",
+        "knowledge/miura/fichas/02-formulas-cobertura-escenarios.md",
+        "knowledge/miura/fichas/03-recomendaciones-scrum-kanban.md"
+      ]
+    },
+    {
+      "id": "miura-tasks",
+      "title": "TASKS - MIURA Web App / MVP 0.1",
+      "sourceType": "local_control_document",
+      "language": "es",
+      "localPath": "TASKS.md",
+      "status": "available",
+      "license": "project-internal",
+      "includeForDirectIngestion": false,
+      "generatedCorpusPaths": [
+        "knowledge/miura/fichas/00-alcance-y-disclaimers.md",
+        "knowledge/miura/fichas/02-formulas-cobertura-escenarios.md"
+      ]
+    },
+    {
+      "id": "miura-domain-code",
+      "title": "Codigo de dominio MIURA aceptado",
+      "sourceType": "local_code",
+      "language": "es",
+      "localPath": "lib/miura/domain",
+      "status": "available",
+      "license": "project-internal",
+      "includeForDirectIngestion": false,
+      "generatedCorpusPaths": [
+        "knowledge/miura/fichas/01-pilares-metricas-rubricas.md",
+        "knowledge/miura/fichas/02-formulas-cobertura-escenarios.md",
+        "knowledge/miura/fichas/03-recomendaciones-scrum-kanban.md"
+      ]
+    },
+    {
+      "id": "miura-tfg-original",
+      "title": "TFG - Deuda tecnica: diseno de un framework de cuantificacion y prevencion para la estrategia de negocio",
+      "sourceType": "academic_curated_extract",
+      "language": "es",
+      "localPath": "knowledge/miura/tfg/tfg-miura-seleccion.md",
+      "status": "curated_extract_available",
+      "license": "project-internal-owner-provided",
+      "includeForDirectIngestion": true,
+      "requiredBeforeFullRag": false,
+      "sourceSelectionPath": "knowledge/miura/tfg/source-selection.md",
+      "generatedFrom": "DEUDA TECNICA.docx",
+      "notes": "Extracto metodologico curado desde la fuente final editable del TFG. No se versionan DOCX/PDF originales, imagenes, logos, CSV bruto ni versiones antiguas."
+    },
+    {
+      "id": "scrum-guide-2020-official",
+      "title": "The Scrum Guide, November 2020",
+      "sourceType": "official_method_guide",
+      "language": "es",
+      "version": "2020-11",
+      "authors": ["Ken Schwaber", "Jeff Sutherland"],
+      "canonicalUrl": "https://scrumguides.org/download.html",
+      "spanishEuropeanPdfUrl": "https://scrumguides.org/docs/scrumguide/v2020/2020-Scrum-Guide-Spanish-European.pdf",
+      "englishPdfUrl": "https://scrumguides.org/docs/scrumguide/v2020/2020-Scrum-Guide-US.pdf",
+      "localPath": "knowledge/scrum/scrum-guide-2020-miura-notes.md",
+      "status": "summary_available",
+      "license": "CC BY-SA 4.0 per official guide",
+      "includeForDirectIngestion": true
+    },
+    {
+      "id": "kanban-guide-2025-official",
+      "title": "The Kanban Guide, May 2025",
+      "sourceType": "official_method_guide",
+      "language": "es",
+      "version": "2025.5",
+      "canonicalUrl": "https://kanbanguides.org/the-kanban-guide/",
+      "localPath": "knowledge/kanban/kanban-guide-miura-notes.md",
+      "status": "summary_available",
+      "license": "Creative Commons per official guide page",
+      "includeForDirectIngestion": true
+    },
+    {
+      "id": "kanban-university-official-method",
+      "title": "The Official Guide to the Kanban Method",
+      "sourceType": "official_method_guide",
+      "language": "es",
+      "canonicalUrl": "https://kanban.university/kanban-guide/",
+      "pdfUrl": "https://kanban.university/wp-content/uploads/2023/04/The-Official-Kanban-Guide_A4.pdf",
+      "localPath": "knowledge/kanban/kanban-guide-miura-notes.md",
+      "status": "summary_available",
+      "license": "copyright Kanban University/Mauvius Group; use summary and citation only unless license is confirmed",
+      "includeForDirectIngestion": true
+    }
+  ]
+}
