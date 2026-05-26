@@ -60,6 +60,8 @@ Required server-side variables:
 - `SUPABASE_SERVICE_ROLE_KEY` or server-side equivalent `SUPABASE_SECRET_KEY`
 - Optional: `OPENAI_EMBEDDING_MODEL`, defaults to `text-embedding-3-small`
 - Optional: `MIURA_EMBEDDING_DIMENSIONS`, defaults to `1536`
+- Optional for retrieval: `MIURA_RAG_TOP_K`, defaults to `5`
+- Optional for retrieval: `MIURA_RAG_MATCH_THRESHOLD`, defaults to `0.25`
 
 Validate without external writes:
 
@@ -123,3 +125,26 @@ select
 Do not ingest original TFG binaries, images, CSV exports, questionnaire
 screenshots, templates, rubrics, or old versions unless a later task explicitly
 changes the corpus policy.
+
+## Retrieve context with citations
+
+TASK-019 adds a server-side retriever in `lib/miura/rag/retrieve.ts`. It embeds
+the query with LangChain `OpenAIEmbeddings`, calls the accepted
+`match_knowledge_chunks` RPC, applies `topK` plus similarity threshold, and
+returns citation-ready metadata for later chat/API tasks.
+
+The current MVP corpus was calibrated with:
+
+```bash
+RUN_MIURA_RAG_INTEGRATION=1 MIURA_RAG_MATCH_THRESHOLD=0.25 npm run test -- tests/miura-rag-retrieve.integration.test.ts
+```
+
+Expected behavior:
+
+- `que es PDI` returns at least one MIURA citation with title, section and
+  snippet.
+- `quien gano el mundial de futbol de 2010` returns insufficient sources.
+
+The previous threshold `0.72` is too strict for the current small corpus and
+returns no sources for accepted MIURA queries. Keep retrieval server-side and do
+not expose Supabase service keys or OpenAI keys with a `NEXT_PUBLIC_` prefix.
