@@ -45,7 +45,8 @@ next-env.d.ts
 /lib/generated/prisma
 *.md
 !knowledge/**/*.md
+!supabase/README.md
 .agents
 prisma/migrations
 
-supabase/migrations
+/supabase/.temp/
