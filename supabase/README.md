@@ -62,6 +62,11 @@ Required server-side variables:
 - Optional: `MIURA_EMBEDDING_DIMENSIONS`, defaults to `1536`
 - Optional for retrieval: `MIURA_RAG_TOP_K`, defaults to `5`
 - Optional for retrieval: `MIURA_RAG_MATCH_THRESHOLD`, defaults to `0.25`
+- Optional for chat: `OPENAI_CHAT_MODEL`, defaults to `gpt-5.4-mini`
+- Optional for chat: `MIURA_CHAT_MAX_OUTPUT_TOKENS`, defaults to `900`
+- Optional for chat: `ENABLE_RAG_CHAT`, defaults to enabled unless set to
+  `false`, `0`, `off`, or `no`
+- Optional for chat: `ENABLE_EVALUATION_CONTEXT_IN_CHAT`, defaults to enabled
 
 Validate without external writes:
 
@@ -148,3 +153,38 @@ Expected behavior:
 The previous threshold `0.72` is too strict for the current small corpus and
 returns no sources for accepted MIURA queries. Keep retrieval server-side and do
 not expose Supabase service keys or OpenAI keys with a `NEXT_PUBLIC_` prefix.
+
+## Serve `/api/chat`
+
+TASK-020 adds a Next.js App Router route at `app/api/chat/route.ts`. The route
+validates AI SDK `DefaultChatTransport`-compatible payloads with Zod, rejects
+client-provided system messages and non-text user parts, runs retrieval before
+generation, streams answers with Vercel AI SDK `streamText`, and sends citation
+metadata as a `data-citations` stream part.
+
+The endpoint fails closed:
+
+- malformed or unsupported payloads return HTTP 400;
+- disabled or unavailable RAG configuration returns HTTP 503;
+- no sufficient retrieval sources streams a controlled no-sources answer without
+  calling the LLM;
+- provider streaming failures emit a controlled Spanish error and log only
+  sanitized error category/name.
+
+Run the local API/unit coverage without external provider calls:
+
+```bash
+npm run test -- tests/miura-chat-api.test.ts
+```
+
+Run the gated end-to-end API validation against OpenAI and Supabase:
+
+```bash
+RUN_MIURA_CHAT_INTEGRATION=1 MIURA_RAG_MATCH_THRESHOLD=0.25 npm run test -- tests/miura-chat-api.integration.test.ts
+```
+
+Expected behavior:
+
+- `¿Qué es PDI en MIURA?` returns a streaming response with citation metadata.
+- `¿Quién ganó el mundial de fútbol de 2010?` returns the controlled no-sources
+  response and no citations.
