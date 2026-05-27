@@ -2,13 +2,20 @@
 
 Fecha: 2026-05-27
 
-Estado: validacion local completa; pendiente de QA sobre RC desplegado.
+Estado: release candidate desplegado y listo para QA.
 
-Referencia RC: commit que contiene este reporte, mas la evidencia final
-registrada en `TASKS.md` y en la salida de `git rev-parse HEAD` durante
-`TASK-030`.
+Commit RC validado: `2fa981f0d054ed26959f32667d8da69579d9c796`
+
+Nota: cualquier commit posterior que solo actualice este reporte no modifica el
+runtime de la app validada.
 
 Deploy publico objetivo: <https://miura-web.vercel.app>
+
+Deployment Vercel validado:
+<https://miura-5r2hdltu5-carlotamoreenos-projects.vercel.app>
+
+GitHub Actions run:
+<https://github.com/carlotamoreeno/MIURA-WEB/actions/runs/26531640699>
 
 ## Alcance
 
@@ -19,23 +26,23 @@ evidencia para QA.
 
 ## Checklist de aceptacion
 
-| ID     | Criterio                                                                  | Evidencia RC                                                                                                                                   | Estado  |
-| ------ | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ------- |
-| AC-001 | Usuario puede crear evaluacion sin login.                                 | `npm run test:e2e` pasa flujo critico de creacion sin login; suite completa 57 passed / 1 skipped.                                             | Pasa    |
-| AC-002 | Wizard contiene 3 pilares y 12 metricas MIURA.                            | `npm run test`, `tests/e2e/metric-wizard.spec.ts` dentro de `npm run test:e2e`, y catalogo MIURA validado.                                     | Pasa    |
-| AC-003 | Motor calcula CDI, DDI, PDI, DS, CF, capacidad perdida, PWC y break-even. | `npm run test` pasa 107 tests, incluyendo formulas y fixtures MIURA.                                                                           | Pasa    |
-| AC-004 | Cobertura insuficiente bloquea monetizacion fuerte.                       | `npm run test` y E2E scorecard/report cubren diagnostico parcial y bloqueo monetario.                                                          | Pasa    |
-| AC-005 | Scorecard ejecutiva y tecnica muestran resultados y supuestos.            | `npm run test:e2e` incluye `scorecard.spec.ts` con tabs ejecutiva/tecnica, supuestos y mobile smoke.                                           | Pasa    |
-| AC-006 | Recomendaciones se adaptan a severidad y pilar dominante.                 | `npm run test` incluye recomendaciones MIURA y matriz de severidad/pilar dominante.                                                            | Pasa    |
-| AC-007 | Mapeo Scrum/Kanban esta disponible.                                       | `npm run test` y `npm run test:e2e` incluyen paginas `/metodologia` y `/scrum-kanban` con eventos/puntos requeridos.                           | Pasa    |
-| AC-008 | Chatbot responde con citas sobre corpus.                                  | `RUN_MIURA_CHAT_INTEGRATION=1 MIURA_RAG_MATCH_THRESHOLD=0.25 npm run test -- tests/miura-chat-api.integration.test.ts` pasa 2/2.               | Pasa    |
-| AC-009 | Chatbot no inventa si no hay fuentes.                                     | La integracion de chat y retriever gated pasa positivos/negativos; matriz `knowledge/rag-eval.md` aceptada en TASK-022.                        | Pasa    |
-| AC-010 | Datos de evaluacion no se guardan en servidor.                            | Revision de frontera: APIs existentes son `/api/chat` y `/api/analytics`; Supabase aparece solo en RAG ingestion/retrieve, no evaluaciones.    | Pasa    |
-| AC-011 | Export/import local funciona.                                             | `npm run test:e2e` incluye `local-settings.spec.ts` y flujo critico export/reset/import.                                                       | Pasa    |
-| AC-012 | Informe exportable incluye disclaimers.                                   | `npm run test:e2e` incluye `report.spec.ts` con Markdown, print, diagnostico parcial y disclaimers.                                            | Pasa    |
-| AC-013 | UI responsive y accesible en flujos clave.                                | `npm run test:e2e`, `npm run test:e2e:browsers` y `npm run perf:lighthouse` pasan; Axe/responsive/browser/performance cubiertos.               | Pasa    |
-| AC-014 | Build y deploy preview pasan sin errores.                                 | Local `npm run build` y local Lighthouse pasan. CI/Vercel/public Lighthouse se validan despues del push de este RC.                            | Parcial |
-| AC-015 | Documentacion de instalacion, ingesta y runbook completa.                 | `README.md`, `docs/rag-ingestion.md`, `docs/runbook.md`, `supabase/README.md` revisados; `npm run rag:ingest:dry-run` pasa 7 docs / 10 chunks. | Pasa    |
+| ID     | Criterio                                                                  | Evidencia RC                                                                                                                                    | Estado |
+| ------ | ------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| AC-001 | Usuario puede crear evaluacion sin login.                                 | `npm run test:e2e` pasa flujo critico de creacion sin login; suite completa 57 passed / 1 skipped.                                              | Pasa   |
+| AC-002 | Wizard contiene 3 pilares y 12 metricas MIURA.                            | `npm run test`, `tests/e2e/metric-wizard.spec.ts` dentro de `npm run test:e2e`, y catalogo MIURA validado.                                      | Pasa   |
+| AC-003 | Motor calcula CDI, DDI, PDI, DS, CF, capacidad perdida, PWC y break-even. | `npm run test` pasa 107 tests, incluyendo formulas y fixtures MIURA.                                                                            | Pasa   |
+| AC-004 | Cobertura insuficiente bloquea monetizacion fuerte.                       | `npm run test` y E2E scorecard/report cubren diagnostico parcial y bloqueo monetario.                                                           | Pasa   |
+| AC-005 | Scorecard ejecutiva y tecnica muestran resultados y supuestos.            | `npm run test:e2e` incluye `scorecard.spec.ts` con tabs ejecutiva/tecnica, supuestos y mobile smoke.                                            | Pasa   |
+| AC-006 | Recomendaciones se adaptan a severidad y pilar dominante.                 | `npm run test` incluye recomendaciones MIURA y matriz de severidad/pilar dominante.                                                             | Pasa   |
+| AC-007 | Mapeo Scrum/Kanban esta disponible.                                       | `npm run test` y `npm run test:e2e` incluyen paginas `/metodologia` y `/scrum-kanban` con eventos/puntos requeridos.                            | Pasa   |
+| AC-008 | Chatbot responde con citas sobre corpus.                                  | `RUN_MIURA_CHAT_INTEGRATION=1 MIURA_RAG_MATCH_THRESHOLD=0.25 npm run test -- tests/miura-chat-api.integration.test.ts` pasa 2/2.                | Pasa   |
+| AC-009 | Chatbot no inventa si no hay fuentes.                                     | La integracion de chat y retriever gated pasa positivos/negativos; matriz `knowledge/rag-eval.md` aceptada en TASK-022.                         | Pasa   |
+| AC-010 | Datos de evaluacion no se guardan en servidor.                            | Revision de frontera: APIs existentes son `/api/chat` y `/api/analytics`; Supabase aparece solo en RAG ingestion/retrieve, no evaluaciones.     | Pasa   |
+| AC-011 | Export/import local funciona.                                             | `npm run test:e2e` incluye `local-settings.spec.ts` y flujo critico export/reset/import.                                                        | Pasa   |
+| AC-012 | Informe exportable incluye disclaimers.                                   | `npm run test:e2e` incluye `report.spec.ts` con Markdown, print, diagnostico parcial y disclaimers.                                             | Pasa   |
+| AC-013 | UI responsive y accesible en flujos clave.                                | `npm run test:e2e`, `npm run test:e2e:browsers` y `npm run perf:lighthouse` pasan; Axe/responsive/browser/performance cubiertos.                | Pasa   |
+| AC-014 | Build y deploy preview pasan sin errores.                                 | Local build/Lighthouse pasan; GitHub Actions run `26531640699` pasa; Vercel deployment `miura-5r2hdltu5` esta `Ready`; Lighthouse publico pasa. | Pasa   |
+| AC-015 | Documentacion de instalacion, ingesta y runbook completa.                 | `README.md`, `docs/rag-ingestion.md`, `docs/runbook.md`, `supabase/README.md` revisados; `npm run rag:ingest:dry-run` pasa 7 docs / 10 chunks.  | Pasa   |
 
 ## Validacion ejecutada
 
@@ -57,6 +64,11 @@ evidencia para QA.
 | `git diff --check`                                                                                                        | Pasa.                                                                                               |
 | Secret scan `.next/static`                                                                                                | Pasa; sin coincidencias para claves OpenAI/Supabase/DIRECT_URL/NEXT_PUBLIC.                         |
 | Source map scan `.next/static`                                                                                            | Pasa; no se encontraron `*.map`.                                                                    |
+| `git push origin main`                                                                                                    | Pasa; `main` avanza a `2fa981f0d054ed26959f32667d8da69579d9c796`.                                   |
+| GitHub Actions `26531640699`                                                                                              | Pasa; lint, format, typecheck, unit tests, build, E2E, browser support, uploads y audit.            |
+| Vercel deployment                                                                                                         | Pasa; commit `2fa981f`, build `npm run build`, status `Ready`, deployment `miura-5r2hdltu5`.        |
+| `curl -I -L https://miura-web.vercel.app`                                                                                 | Pasa; HTTP 200 en alias publico.                                                                    |
+| `MIURA_LIGHTHOUSE_BASE_URL=https://miura-web.vercel.app npm run perf:lighthouse`                                          | Pasa; landing mobile LCP 2067ms, landing desktop 416ms, wizard mobile 1243ms, wizard desktop 554ms. |
 
 ## Revision de cobertura y orfandad
 
@@ -86,6 +98,5 @@ evidencia para QA.
 
 ## Decision go/no-go
 
-Go tecnico para QA sobre el release candidate, condicionado a que el push de
-este commit complete CI/Vercel y que el Lighthouse publico contra
-`https://miura-web.vercel.app` mantenga LCP <= 2500ms en landing y wizard.
+Go tecnico para QA sobre el release candidate. `AC-001` a `AC-015` pasan con la
+evidencia local, RAG gated, CI, Vercel y Lighthouse publico registrada arriba.
