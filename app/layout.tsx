@@ -1,21 +1,10 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 
 import packageJson from "@/package.json";
-import { MiuraAnalyticsProvider } from "@/lib/miura/analytics/client";
 import { readMiuraAnalyticsEnabled } from "@/lib/miura/analytics/server";
 import { MiuraAppShell } from "@/components/miura/app-shell";
 import "./globals.css";
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
-});
-
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
-  subsets: ["latin"],
-});
 
 export const metadata: Metadata = {
   title: {
@@ -26,23 +15,86 @@ export const metadata: Metadata = {
     "Demo guiada de MIURA para explicar y evaluar deuda técnica sin login.",
 };
 
+function createMiuraAnalyticsBootstrapScript({
+  appVersion,
+  enabled,
+}: {
+  appVersion: string;
+  enabled: boolean;
+}) {
+  const configJson = JSON.stringify({ appVersion, enabled });
+
+  return String.raw`
+(() => {
+  const config = ${configJson};
+  window.__MIURA_ANALYTICS_CONFIG__ = config;
+
+  if (!config.enabled) return;
+
+  const storageKey = "miura.analytics.sessionId.v1";
+  const sessionPrefix = "miura-session-";
+
+  function createSessionId() {
+    const randomPart = window.crypto?.randomUUID?.() ||
+      Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 14);
+
+    return sessionPrefix + randomPart;
+  }
+
+  function getSessionId() {
+    try {
+      const storedSessionId = window.sessionStorage.getItem(storageKey);
+
+      if (storedSessionId !== null) return storedSessionId;
+
+      const nextSessionId = createSessionId();
+      window.sessionStorage.setItem(storageKey, nextSessionId);
+      return nextSessionId;
+    } catch {
+      return createSessionId();
+    }
+  }
+
+  fetch("/api/analytics", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      eventName: "app_opened",
+      sessionId: getSessionId(),
+      timestamp: new Date().toISOString(),
+      properties: {
+        appVersion: config.appVersion,
+      },
+    }),
+    keepalive: true,
+  }).catch(() => undefined);
+})();
+`;
+}
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const analyticsEnabled = readMiuraAnalyticsEnabled();
+
   return (
-    <html
-      lang="es"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
-    >
+    <html lang="es" className="h-full antialiased">
       <body className="min-h-full">
-        <MiuraAnalyticsProvider
-          appVersion={packageJson.version}
-          enabled={readMiuraAnalyticsEnabled()}
-        >
-          <MiuraAppShell>{children}</MiuraAppShell>
-        </MiuraAnalyticsProvider>
+        <Script
+          id="miura-analytics-bootstrap"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: createMiuraAnalyticsBootstrapScript({
+              appVersion: packageJson.version,
+              enabled: analyticsEnabled,
+            }),
+          }}
+        />
+        <MiuraAppShell>{children}</MiuraAppShell>
       </body>
     </html>
   );

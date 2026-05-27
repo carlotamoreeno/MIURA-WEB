@@ -1,18 +1,6 @@
 "use client";
 
 import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  type ReactNode,
-} from "react";
-
-import {
-  MIURA_ANALYTICS_SESSION_ID_PREFIX,
-  parseMiuraAnalyticsEvent,
   type MiuraAnalyticsEventName,
   type MiuraAnalyticsEventProperties,
 } from "./events";
@@ -22,25 +10,25 @@ type TrackMiuraAnalyticsEvent = <TName extends MiuraAnalyticsEventName>(
   properties: MiuraAnalyticsEventProperties<TName>,
 ) => void;
 
-type MiuraAnalyticsContextValue = {
-  enabled: boolean;
-  trackMiuraAnalyticsEvent: TrackMiuraAnalyticsEvent;
-};
-
-type MiuraAnalyticsProviderProps = {
+type MiuraAnalyticsBootstrapProps = {
   appVersion: string;
   enabled: boolean;
-  children: ReactNode;
 };
 
+declare global {
+  interface Window {
+    __MIURA_ANALYTICS_CONFIG__?: MiuraAnalyticsBootstrapProps;
+  }
+}
+
 const MIURA_ANALYTICS_SESSION_STORAGE_KEY = "miura.analytics.sessionId.v1";
+const MIURA_ANALYTICS_SESSION_ID_PREFIX = "miura-session-";
 
-const noopTrackMiuraAnalyticsEvent: TrackMiuraAnalyticsEvent = () => undefined;
-
-const MiuraAnalyticsContext = createContext<MiuraAnalyticsContextValue>({
+const miuraAnalyticsRuntime = {
+  appVersion: "0.1.0",
   enabled: false,
-  trackMiuraAnalyticsEvent: noopTrackMiuraAnalyticsEvent,
-});
+  sessionId: undefined as string | undefined,
+};
 
 function createAnonymousSessionId() {
   const randomPart =
@@ -73,72 +61,73 @@ function getOrCreateAnonymousSessionId() {
   }
 }
 
-function MiuraAnalyticsProvider({
+function configureMiuraAnalytics({
   appVersion,
   enabled,
-  children,
-}: MiuraAnalyticsProviderProps) {
-  const sessionIdRef = useRef<string | undefined>(undefined);
-
-  const trackMiuraAnalyticsEvent = useCallback<TrackMiuraAnalyticsEvent>(
-    (eventName, properties) => {
-      if (!enabled || typeof window === "undefined") {
-        return;
-      }
-
-      sessionIdRef.current ??= getOrCreateAnonymousSessionId();
-
-      const event = {
-        eventName,
-        sessionId: sessionIdRef.current,
-        timestamp: new Date().toISOString(),
-        properties,
-      };
-      const parsedEvent = parseMiuraAnalyticsEvent(event);
-
-      if (!parsedEvent.success) {
-        return;
-      }
-
-      void fetch("/api/analytics", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(parsedEvent.data),
-        keepalive: true,
-      }).catch(() => undefined);
-    },
-    [enabled],
-  );
-
-  useEffect(() => {
-    trackMiuraAnalyticsEvent("app_opened", {
-      appVersion,
-    });
-  }, [appVersion, trackMiuraAnalyticsEvent]);
-
-  const contextValue = useMemo(
-    () => ({
-      enabled,
-      trackMiuraAnalyticsEvent,
-    }),
-    [enabled, trackMiuraAnalyticsEvent],
-  );
-
-  return (
-    <MiuraAnalyticsContext.Provider value={contextValue}>
-      {children}
-    </MiuraAnalyticsContext.Provider>
-  );
+}: MiuraAnalyticsBootstrapProps) {
+  miuraAnalyticsRuntime.appVersion = appVersion;
+  miuraAnalyticsRuntime.enabled = enabled;
 }
+
+function syncMiuraAnalyticsRuntimeFromWindow() {
+  if (typeof window === "undefined") {
+    return miuraAnalyticsRuntime;
+  }
+
+  const config = window.__MIURA_ANALYTICS_CONFIG__;
+
+  if (config !== undefined) {
+    configureMiuraAnalytics(config);
+  }
+
+  return miuraAnalyticsRuntime;
+}
+
+const trackMiuraAnalyticsEvent: TrackMiuraAnalyticsEvent = (
+  eventName,
+  properties,
+) => {
+  const runtime = syncMiuraAnalyticsRuntimeFromWindow();
+
+  if (!runtime.enabled || typeof window === "undefined") {
+    return;
+  }
+
+  runtime.sessionId ??= getOrCreateAnonymousSessionId();
+
+  const event = {
+    eventName,
+    sessionId: runtime.sessionId,
+    timestamp: new Date().toISOString(),
+    properties,
+  };
+
+  void (async () => {
+    const { parseMiuraAnalyticsEvent } = await import("./events");
+    const parsedEvent = parseMiuraAnalyticsEvent(event);
+
+    if (!parsedEvent.success) {
+      return;
+    }
+
+    await fetch("/api/analytics", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(parsedEvent.data),
+      keepalive: true,
+    });
+  })().catch(() => undefined);
+};
 
 function useMiuraAnalytics() {
-  return useContext(MiuraAnalyticsContext);
+  const runtime = syncMiuraAnalyticsRuntimeFromWindow();
+
+  return {
+    enabled: runtime.enabled,
+    trackMiuraAnalyticsEvent,
+  };
 }
 
-export {
-  MiuraAnalyticsProvider,
-  useMiuraAnalytics,
-  type TrackMiuraAnalyticsEvent,
-};
+export { useMiuraAnalytics, type TrackMiuraAnalyticsEvent };

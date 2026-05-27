@@ -53,11 +53,11 @@ export default function Home() {
       <PageIntro
         eyebrow="MIURA MVP 0.1"
         title="Deuda técnica explicada en lenguaje de negocio."
-        description="MIURA estructura señales técnicas, documentales y de proceso para ayudar a dirección, delivery y equipos técnicos a priorizar conversaciones sobre deuda técnica sin convertir la demo en una calculadora de precisión falsa."
+        description="MIURA convierte señales técnicas, documentales y de proceso en decisiones de riesgo y capacidad."
       >
         <div className="flex flex-col gap-2 sm:flex-row">
           <Button asChild size="lg" className="sm:w-fit">
-            <Link href="/evaluacion/nueva">
+            <Link href="/evaluacion/nueva" prefetch={false}>
               Crear evaluación MIURA
               <ArrowRightIcon />
             </Link>
@@ -80,11 +80,9 @@ export default function Home() {
             <h2 className="text-2xl leading-tight font-semibold">
               Del síntoma técnico a una decisión de negocio trazable.
             </h2>
-            <p className="text-muted-foreground leading-7">
-              La aplicación guía una evaluación local por pilares, calcula
-              severidad y prepara superficies para scorecard, informe y consulta
-              RAG con citas del corpus controlado cuando esas tareas estén
-              implementadas.
+            <p className="text-muted-foreground text-sm leading-6 sm:text-base sm:leading-7">
+              Guía la evaluación local, calcula severidad y conecta scorecard,
+              informe y chat RAG con citas del corpus controlado.
             </p>
           </div>
           <div className="grid gap-3">
@@ -107,8 +105,8 @@ export default function Home() {
               Scorecard ejecutivo y técnico
             </h2>
             <p className="text-muted-foreground mt-2 text-sm leading-6">
-              La navegación ya reserva las vistas de resultados, supuestos y
-              salida de informe para las siguientes tareas de cálculo y UX.
+              Resume severidad, cobertura, escenarios, supuestos y trazabilidad
+              técnica para discusión ejecutiva.
             </p>
           </div>
           <div className="border-border bg-card rounded-lg border p-5">
@@ -118,8 +116,8 @@ export default function Home() {
             />
             <h2 className="mt-4 text-base font-semibold">Demo sin login</h2>
             <p className="text-muted-foreground mt-2 text-sm leading-6">
-              El MVP no solicita email, contraseña ni cuenta; la persistencia de
-              evaluaciones se implementará como almacenamiento local.
+              El MVP no solicita email, contraseña ni cuenta; las evaluaciones
+              se guardan localmente en el navegador.
             </p>
           </div>
         </div>

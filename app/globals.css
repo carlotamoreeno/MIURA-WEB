@@ -1,15 +1,55 @@
 @import "tailwindcss";
-@import "tw-animate-css";
 @import "shadcn/tailwind.css";
+
+@source not "../components/miura/design-system-showcase.tsx";
+@source not "../components/ui/accordion.tsx";
+@source not "../components/ui/aspect-ratio.tsx";
+@source not "../components/ui/avatar.tsx";
+@source not "../components/ui/breadcrumb.tsx";
+@source not "../components/ui/button-group.tsx";
+@source not "../components/ui/calendar.tsx";
+@source not "../components/ui/carousel.tsx";
+@source not "../components/ui/chart.tsx";
+@source not "../components/ui/collapsible.tsx";
+@source not "../components/ui/combobox.tsx";
+@source not "../components/ui/command.tsx";
+@source not "../components/ui/context-menu.tsx";
+@source not "../components/ui/direction.tsx";
+@source not "../components/ui/drawer.tsx";
+@source not "../components/ui/dropdown-menu.tsx";
+@source not "../components/ui/hover-card.tsx";
+@source not "../components/ui/input-group.tsx";
+@source not "../components/ui/input-otp.tsx";
+@source not "../components/ui/item.tsx";
+@source not "../components/ui/kbd.tsx";
+@source not "../components/ui/label.tsx";
+@source not "../components/ui/menubar.tsx";
+@source not "../components/ui/navigation-menu.tsx";
+@source not "../components/ui/pagination.tsx";
+@source not "../components/ui/popover.tsx";
+@source not "../components/ui/resizable.tsx";
+@source not "../components/ui/separator.tsx";
+@source not "../components/ui/sheet.tsx";
+@source not "../components/ui/sidebar.tsx";
+@source not "../components/ui/skeleton.tsx";
+@source not "../components/ui/slider.tsx";
+@source not "../components/ui/sonner.tsx";
+@source not "../components/ui/toggle-group.tsx";
+@source not "../components/ui/toggle.tsx";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-geist-sans);
+  --font-sans:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
+  --font-mono:
+    "SFMono-Regular", Consolas, "Liberation Mono", ui-monospace, monospace;
+  --font-heading:
+    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);

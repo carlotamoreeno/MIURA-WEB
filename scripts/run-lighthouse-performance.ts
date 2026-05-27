@@ -4,6 +4,7 @@ import path from "node:path";
 
 type LighthouseSummary = {
   route: string;
+  profile: string;
   reportPath: string;
   performance: number;
   lcpMs: number;
@@ -22,6 +23,11 @@ const lcpBudgetMs = Number(process.env.MIURA_LIGHTHOUSE_LCP_BUDGET_MS ?? 2500);
 const routes = [
   { name: "landing", path: "/" },
   { name: "wizard", path: "/evaluacion/evaluation-demo/wizard" },
+] as const;
+
+const lighthouseProfiles = [
+  { name: "mobile", args: [] },
+  { name: "desktop", args: ["--preset=desktop"] },
 ] as const;
 
 function runCommand(command: string, args: string[], options = {}) {
@@ -79,15 +85,18 @@ async function waitForServer() {
   throw new Error(`Timed out waiting for ${baseUrl}`);
 }
 
-async function runLighthouse(route: (typeof routes)[number]) {
-  const reportPath = path.join(outputDir, `${route.name}.json`);
+async function runLighthouse(
+  route: (typeof routes)[number],
+  profile: (typeof lighthouseProfiles)[number],
+) {
+  const reportPath = path.join(outputDir, `${route.name}-${profile.name}.json`);
   const url = `${baseUrl}${route.path}`;
 
   await runCommand("npx", [
     "--yes",
     "lighthouse@13.3.0",
     url,
-    "--preset=desktop",
+    ...profile.args,
     "--only-categories=performance",
     "--output=json",
     `--output-path=${reportPath}`,
@@ -107,6 +116,7 @@ async function runLighthouse(route: (typeof routes)[number]) {
 
   return {
     route: route.path,
+    profile: profile.name,
     reportPath,
     performance: report.categories.performance.score,
     lcpMs: report.audits["largest-contentful-paint"].numericValue,
@@ -119,7 +129,7 @@ async function runLighthouse(route: (typeof routes)[number]) {
 function printSummary(summary: LighthouseSummary) {
   console.log(
     [
-      `${summary.route}: performance=${summary.performance.toFixed(2)}`,
+      `${summary.route} [${summary.profile}]: performance=${summary.performance.toFixed(2)}`,
       `LCP=${Math.round(summary.lcpMs)}ms`,
       `FCP=${Math.round(summary.fcpMs)}ms`,
       `TBT=${Math.round(summary.tbtMs)}ms`,
@@ -153,9 +163,11 @@ async function main() {
     const summaries = [];
 
     for (const route of routes) {
-      const summary = await runLighthouse(route);
-      summaries.push(summary);
-      printSummary(summary);
+      for (const profile of lighthouseProfiles) {
+        const summary = await runLighthouse(route, profile);
+        summaries.push(summary);
+        printSummary(summary);
+      }
     }
 
     const failures = summaries.filter((summary) => summary.lcpMs > lcpBudgetMs);
@@ -163,7 +175,12 @@ async function main() {
     if (failures.length > 0) {
       throw new Error(
         `Lighthouse LCP budget exceeded (${lcpBudgetMs}ms): ${failures
-          .map((failure) => `${failure.route}=${Math.round(failure.lcpMs)}ms`)
+          .map(
+            (failure) =>
+              `${failure.route} [${failure.profile}]=${Math.round(
+                failure.lcpMs,
+              )}ms`,
+          )
           .join(", ")}`,
       );
     }

@@ -40,7 +40,7 @@ function PageIntro({ eyebrow, title, description, children }: PageIntroProps) {
           <h1 className="text-3xl leading-tight font-semibold tracking-normal text-balance sm:text-4xl">
             {title}
           </h1>
-          <p className="text-muted-foreground text-base leading-7 sm:text-lg">
+          <p className="text-muted-foreground max-w-2xl text-sm leading-6 sm:text-base">
             {description}
           </p>
         </div>

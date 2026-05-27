@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 
 import { PageIntro } from "@/components/miura/page-structure";
-import { EvaluationSessionSummary } from "@/components/miura/evaluation-session-summary";
-import { MetricWizard } from "@/components/miura/metric-wizard";
+import { WizardClientPanel } from "@/components/miura/wizard-client-panel";
 import { Badge } from "@/components/ui/badge";
 
 type EvaluationRouteProps = {
@@ -21,7 +20,7 @@ export default async function WizardPage({ params }: EvaluationRouteProps) {
       <PageIntro
         eyebrow="Wizard"
         title="Wizard de evaluación"
-        description="Completa las métricas MIURA por pilares. Puedes usar una lectura simple bajo/medio/alto, añadir evidencia avanzada o marcar una métrica como no disponible para reflejar la cobertura real."
+        description="Completa las 12 métricas por pilares con lectura simple, evidencia avanzada o estado no disponible para reflejar cobertura real."
       >
         <div className="flex min-w-0 flex-wrap items-center gap-3">
           <Badge
@@ -33,10 +32,7 @@ export default async function WizardPage({ params }: EvaluationRouteProps) {
         </div>
       </PageIntro>
 
-      <section className="mx-auto w-full max-w-6xl space-y-5 px-4 py-10 sm:px-6 lg:px-8">
-        <EvaluationSessionSummary evaluationId={id} />
-        <MetricWizard evaluationId={id} />
-      </section>
+      <WizardClientPanel evaluationId={id} />
     </>
   );
 }

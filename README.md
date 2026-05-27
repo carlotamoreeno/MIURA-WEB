@@ -53,8 +53,9 @@ npm run audit:critical
 `test:e2e:browsers` ejecuta un smoke de navegador moderno en Chromium, Firefox
 y WebKit. Chromium cubre el motor usado por Chrome/Edge; WebKit aproxima Safari
 para CI local. `perf:lighthouse` construye la app, arranca `next start` en
-`127.0.0.1` y guarda JSON de Lighthouse en
-`test-results/lighthouse-task-028/`. Para auditar una preview externa:
+`127.0.0.1` y valida Lighthouse en perfiles móvil y desktop para landing y
+wizard. Los reportes JSON se guardan en `test-results/lighthouse-task-028/`.
+Para auditar una preview externa:
 
 ```bash
 MIURA_LIGHTHOUSE_BASE_URL=https://tu-preview.vercel.app npm run perf:lighthouse
