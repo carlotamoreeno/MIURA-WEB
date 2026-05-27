@@ -8,6 +8,7 @@ import {
   parseMiuraAnalyticsEvent,
 } from "@/lib/miura/analytics/events";
 import {
+  handleMiuraAnalyticsOptionsRequest,
   handleMiuraAnalyticsRequest,
   logMiuraServerError,
 } from "@/lib/miura/analytics/server";
@@ -17,12 +18,19 @@ const baseEvent = {
   timestamp: "2026-05-27T09:00:00.000Z",
 } as const;
 
-function createRequest(body: unknown) {
+function createRequest(body: unknown, init: RequestInit = {}) {
+  const headers = new Headers({
+    "Content-Type": "application/json",
+  });
+
+  new Headers(init.headers).forEach((value, key) => {
+    headers.set(key, value);
+  });
+
   return new Request("http://localhost/api/analytics", {
+    ...init,
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers,
     body: typeof body === "string" ? body : JSON.stringify(body),
   });
 }
@@ -75,6 +83,56 @@ describe("MIURA analytics event contract", () => {
 });
 
 describe("MIURA analytics endpoint", () => {
+  test("rejects disallowed origins before parsing or logging analytics payloads", async () => {
+    const errorLogs: unknown[] = [];
+    const response = await handleMiuraAnalyticsRequest(
+      createRequest("{", {
+        headers: {
+          Origin: "https://attacker.example",
+        },
+      }),
+      {
+        env: {
+          ENABLE_ANALYTICS: "true",
+        },
+        logger: {
+          info: () => undefined,
+          error: (...args: unknown[]) => {
+            errorLogs.push(args);
+          },
+        },
+      },
+    );
+    const body = (await response.json()) as { error: { message: string } };
+
+    expect(response.status).toBe(403);
+    expect(body.error.message).toMatch(/origen/i);
+    expect(errorLogs).toHaveLength(0);
+  });
+
+  test("returns exact-origin analytics preflight headers", () => {
+    const response = handleMiuraAnalyticsOptionsRequest(
+      new Request("http://localhost/api/analytics", {
+        method: "OPTIONS",
+        headers: {
+          Origin: "https://demo.miura.example",
+          "Access-Control-Request-Method": "POST",
+        },
+      }),
+      {
+        env: {
+          MIURA_ALLOWED_ORIGINS: "https://demo.miura.example",
+        },
+      },
+    );
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("Access-Control-Allow-Origin")).toBe(
+      "https://demo.miura.example",
+    );
+    expect(response.headers.get("Access-Control-Allow-Origin")).not.toBe("*");
+  });
+
   test("returns no-op 204 without parsing or logging when analytics is disabled", async () => {
     const infoLogs: unknown[] = [];
     const errorLogs: unknown[] = [];

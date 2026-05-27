@@ -64,6 +64,14 @@ Required server-side variables:
 - Optional for retrieval: `MIURA_RAG_MATCH_THRESHOLD`, defaults to `0.25`
 - Optional for chat: `OPENAI_CHAT_MODEL`, defaults to `gpt-5.4-mini`
 - Optional for chat: `MIURA_CHAT_MAX_OUTPUT_TOKENS`, defaults to `900`
+- Optional for chat cost control: `MIURA_CHAT_RATE_LIMIT_ENABLED`, defaults
+  to `true`
+- Optional for chat cost control: `MIURA_CHAT_RATE_LIMIT_MAX`, defaults to
+  `10`
+- Optional for chat cost control: `MIURA_CHAT_RATE_LIMIT_WINDOW_MS`, defaults
+  to `60000`
+- Optional for API origin control: `MIURA_ALLOWED_ORIGINS`, comma-separated
+  http(s) origins allowed in addition to the app's own origin
 - Optional for chat: `ENABLE_RAG_CHAT`, defaults to enabled unless set to
   `false`, `0`, `off`, or `no`
 - Optional for chat: `ENABLE_EVALUATION_CONTEXT_IN_CHAT`, defaults to enabled
@@ -165,11 +173,31 @@ metadata as a `data-citations` stream part.
 The endpoint fails closed:
 
 - malformed or unsupported payloads return HTTP 400;
+- disallowed browser origins return HTTP 403 and receive no wildcard CORS
+  headers;
+- repeated chat requests return HTTP 429 after the configured rate limit and
+  skip retrieval/LLM calls;
 - disabled or unavailable RAG configuration returns HTTP 503;
 - no sufficient retrieval sources streams a controlled no-sources answer without
   calling the LLM;
 - provider streaming failures emit a controlled Spanish error and log only
   sanitized error category/name.
+
+Security checklist for the MVP chat/API surface:
+
+- `/api/chat` and `/api/analytics` accept exact same-origin browser calls and
+  optional exact origins from `MIURA_ALLOWED_ORIGINS`; they do not emit
+  `Access-Control-Allow-Origin: *`.
+- `/api/chat` has an in-memory per-instance rate limit for MVP cost control.
+  It is suitable for the demo but not a distributed abuse-control system.
+- Evaluation context sent to chat is a minimal DTO; raw `metricValues`,
+  evidence notes, local export JSON, hourly cost, and monthly capacity are not
+  accepted by the chat contract.
+- Assistant Markdown is rendered with `react-markdown`, `remark-gfm`,
+  `rehype-sanitize`, and a component-level http(s)-only link allowlist.
+- Corpus tables keep RLS enabled, revoke direct access from `anon`,
+  `authenticated`, and `public`, and grant corpus table/RPC access only to
+  `service_role` for server-side ingestion/retrieval.
 
 Run the local API/unit coverage without external provider calls:
 

@@ -1,11 +1,16 @@
 import type { ZodError } from "zod";
 
+import {
+  MIURA_API_SECURITY_HEADERS,
+  checkMiuraApiRequestOrigin,
+  createMiuraApiOptionsResponse,
+} from "@/lib/miura/api/security";
 import { parseMiuraAnalyticsEvent, type MiuraAnalyticsEvent } from "./events";
 
-const ANALYTICS_RESPONSE_HEADERS = {
-  "Cache-Control": "no-store",
-  "X-Content-Type-Options": "nosniff",
-} as const;
+const ANALYTICS_RESPONSE_HEADERS = MIURA_API_SECURITY_HEADERS;
+
+const ANALYTICS_SECURITY_CONFIG_ERROR_RESPONSE =
+  "La analítica interna no está configurada correctamente.";
 
 type MiuraServerErrorSurface = "analytics" | "chat";
 type MiuraServerErrorCategory =
@@ -35,9 +40,30 @@ async function handleMiuraAnalyticsRequest(
   dependencies: MiuraAnalyticsDependencies = {},
 ): Promise<Response> {
   const logger = dependencies.logger ?? console;
+  let originCheck: ReturnType<typeof checkMiuraApiRequestOrigin>;
+
+  try {
+    originCheck = checkMiuraApiRequestOrigin(request, {
+      env: dependencies.env,
+    });
+  } catch (error) {
+    logMiuraServerError(logger, {
+      surface: "analytics",
+      category: "config",
+      error,
+    });
+
+    return jsonError(503, ANALYTICS_SECURITY_CONFIG_ERROR_RESPONSE);
+  }
+
+  if (!originCheck.allowed) {
+    return originCheck.response;
+  }
+
+  const responseHeaders = originCheck.headers;
 
   if (!readMiuraAnalyticsEnabled({ env: dependencies.env })) {
-    return noContentResponse();
+    return noContentResponse(responseHeaders);
   }
 
   const rawBody = await readRequestJson(request);
@@ -49,7 +75,11 @@ async function handleMiuraAnalyticsRequest(
       error: new Error("invalid_json"),
     });
 
-    return jsonError(400, "El evento analítico debe ser JSON válido.");
+    return jsonError(
+      400,
+      "El evento analítico debe ser JSON válido.",
+      responseHeaders,
+    );
   }
 
   const parsedEvent = parseMiuraAnalyticsEvent(rawBody.data);
@@ -61,12 +91,37 @@ async function handleMiuraAnalyticsRequest(
       error: parsedEvent.error,
     });
 
-    return jsonError(400, formatAnalyticsValidationError(parsedEvent.error));
+    return jsonError(
+      400,
+      formatAnalyticsValidationError(parsedEvent.error),
+      responseHeaders,
+    );
   }
 
   logMiuraAnalyticsEvent(logger, parsedEvent.data);
 
-  return noContentResponse();
+  return noContentResponse(responseHeaders);
+}
+
+function handleMiuraAnalyticsOptionsRequest(
+  request: Request,
+  dependencies: MiuraAnalyticsDependencies = {},
+) {
+  const logger = dependencies.logger ?? console;
+
+  try {
+    return createMiuraApiOptionsResponse(request, {
+      env: dependencies.env,
+    });
+  } catch (error) {
+    logMiuraServerError(logger, {
+      surface: "analytics",
+      category: "config",
+      error,
+    });
+
+    return jsonError(503, ANALYTICS_SECURITY_CONFIG_ERROR_RESPONSE);
+  }
 }
 
 function logMiuraAnalyticsEvent(
@@ -131,14 +186,20 @@ function formatAnalyticsValidationError(error: ZodError) {
   return `El evento analítico no es válido: ${path}: ${firstIssue.message}`;
 }
 
-function noContentResponse() {
+function noContentResponse(
+  headers: Record<string, string> = ANALYTICS_RESPONSE_HEADERS,
+) {
   return new Response(null, {
     status: 204,
-    headers: ANALYTICS_RESPONSE_HEADERS,
+    headers,
   });
 }
 
-function jsonError(status: number, message: string) {
+function jsonError(
+  status: number,
+  message: string,
+  headers: Record<string, string> = ANALYTICS_RESPONSE_HEADERS,
+) {
   return Response.json(
     {
       error: {
@@ -147,7 +208,7 @@ function jsonError(status: number, message: string) {
     },
     {
       status,
-      headers: ANALYTICS_RESPONSE_HEADERS,
+      headers,
     },
   );
 }
@@ -161,6 +222,7 @@ function readBooleanEnv(rawValue: string | undefined, fallback: boolean) {
 }
 
 export {
+  handleMiuraAnalyticsOptionsRequest,
   handleMiuraAnalyticsRequest,
   logMiuraAnalyticsEvent,
   logMiuraServerError,

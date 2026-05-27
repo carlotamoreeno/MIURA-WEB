@@ -280,6 +280,25 @@ test.describe("MIURA chat UI", () => {
     await expect(page.getByTestId("chat-input")).toBeEnabled();
   });
 
+  test("renders Markdown links safely", async ({ page }) => {
+    await mockChatApi(page, {
+      text: "No abras [este enlace](javascript:alert(1)). Usa [la fuente pública](https://example.com/miura).",
+    });
+    await page.goto("/chat");
+
+    await askQuestion(page, "Dame un enlace de prueba");
+
+    const assistantMessage = page.getByTestId("chat-message-assistant");
+
+    await expect(assistantMessage.getByText("este enlace")).toBeVisible();
+    await expect(
+      assistantMessage.locator("a", { hasText: "este enlace" }),
+    ).toHaveCount(0);
+    await expect(
+      assistantMessage.getByRole("link", { name: "la fuente pública" }),
+    ).toHaveAttribute("href", "https://example.com/miura");
+  });
+
   test("does not overflow horizontally on mobile", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/chat");

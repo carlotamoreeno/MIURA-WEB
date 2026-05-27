@@ -9,6 +9,16 @@ import {
 } from "ai";
 
 import {
+  MIURA_API_SECURITY_HEADERS,
+  checkMiuraApiRequestOrigin,
+  createMiuraApiOptionsResponse,
+} from "@/lib/miura/api/security";
+import {
+  checkMiuraChatRateLimit,
+  type MiuraRateLimitStore,
+} from "@/lib/miura/api/rate-limit";
+import { logMiuraServerError } from "@/lib/miura/analytics/server";
+import {
   extractTextFromChatMessage,
   formatCoverageStatusForChat,
   formatPillarForChat,
@@ -20,7 +30,6 @@ import {
   type MiuraChatRequestBody,
   type MiuraMinimalEvaluationContext,
 } from "./chat-contract";
-import { logMiuraServerError } from "@/lib/miura/analytics/server";
 import {
   DEFAULT_RAG_MATCH_THRESHOLD,
   DEFAULT_RAG_TOP_K,
@@ -46,10 +55,16 @@ const MIURA_PROVIDER_ERROR_RESPONSE =
 const MIURA_RETRIEVAL_ERROR_RESPONSE =
   "No se ha podido recuperar evidencia del corpus MIURA. Reintenta más tarde; la evaluación local no se ha visto afectada.";
 
-const RESPONSE_HEADERS = {
-  "Cache-Control": "no-store",
-  "X-Content-Type-Options": "nosniff",
-} as const;
+const MIURA_RATE_LIMIT_RESPONSE =
+  "Has alcanzado el límite temporal de preguntas al chat MIURA. Espera unos segundos antes de reintentar; la evaluación local no se ha visto afectada.";
+
+const MIURA_SECURITY_CONFIG_ERROR_RESPONSE =
+  "El chat RAG no está configurado correctamente. La evaluación local sigue disponible.";
+
+const MIURA_RATE_LIMIT_CONFIG_ERROR_RESPONSE =
+  "El control de coste del chat no está configurado correctamente. La evaluación local sigue disponible.";
+
+const RESPONSE_HEADERS = MIURA_API_SECURITY_HEADERS;
 
 type MiuraChatConfig = {
   enabled: boolean;
@@ -86,6 +101,8 @@ type MiuraChatDependencies = {
   retrieveKnowledge?: (query: string) => Promise<MiuraKnowledgeRetrievalResult>;
   createLanguageModel?: (config: MiuraChatConfig) => LanguageModel;
   streamText?: (input: StreamTextInput) => StreamTextResultLike;
+  rateLimitStore?: MiuraRateLimitStore;
+  now?: () => number;
 };
 
 async function handleMiuraChatRequest(
@@ -93,16 +110,76 @@ async function handleMiuraChatRequest(
   dependencies: MiuraChatDependencies = {},
 ): Promise<Response> {
   const logger = dependencies.logger ?? console;
+  let originCheck: ReturnType<typeof checkMiuraApiRequestOrigin>;
+
+  try {
+    originCheck = checkMiuraApiRequestOrigin(request, {
+      env: dependencies.env,
+    });
+  } catch (error) {
+    logMiuraServerError(logger, {
+      surface: "chat",
+      category: "config",
+      error,
+    });
+
+    return jsonError(503, MIURA_SECURITY_CONFIG_ERROR_RESPONSE);
+  }
+
+  if (!originCheck.allowed) {
+    return originCheck.response;
+  }
+
+  let responseHeaders: Record<string, string> = originCheck.headers;
+  const rateLimitResult = (() => {
+    try {
+      return checkMiuraChatRateLimit(request, {
+        env: dependencies.env,
+        now: dependencies.now,
+        store: dependencies.rateLimitStore,
+      });
+    } catch (error) {
+      logMiuraServerError(logger, {
+        surface: "chat",
+        category: "config",
+        error,
+      });
+
+      return null;
+    }
+  })();
+
+  if (rateLimitResult === null) {
+    return jsonError(
+      503,
+      MIURA_RATE_LIMIT_CONFIG_ERROR_RESPONSE,
+      responseHeaders,
+    );
+  }
+
+  responseHeaders = {
+    ...responseHeaders,
+    ...rateLimitResult.headers,
+  };
+
+  if (!rateLimitResult.allowed) {
+    return jsonError(429, MIURA_RATE_LIMIT_RESPONSE, responseHeaders);
+  }
+
   const rawBody = await readRequestJson(request);
 
   if (!rawBody.success) {
-    return jsonError(400, rawBody.message);
+    return jsonError(400, rawBody.message, responseHeaders);
   }
 
   const parsedBody = parseMiuraChatRequestBody(rawBody.data);
 
   if (!parsedBody.success) {
-    return jsonError(400, formatChatValidationError(parsedBody.error));
+    return jsonError(
+      400,
+      formatChatValidationError(parsedBody.error),
+      responseHeaders,
+    );
   }
 
   let config: MiuraChatConfig;
@@ -118,7 +195,8 @@ async function handleMiuraChatRequest(
 
     return jsonError(
       503,
-      "El chat RAG no está configurado correctamente. La evaluación local sigue disponible.",
+      MIURA_SECURITY_CONFIG_ERROR_RESPONSE,
+      responseHeaders,
     );
   }
 
@@ -126,13 +204,18 @@ async function handleMiuraChatRequest(
     return jsonError(
       503,
       "El chat RAG está desactivado temporalmente. Puedes seguir usando la evaluación local y el informe.",
+      responseHeaders,
     );
   }
 
   const question = getLatestUserQuestion(parsedBody.data.messages);
 
   if (question === null) {
-    return jsonError(400, "El payload necesita una pregunta de usuario.");
+    return jsonError(
+      400,
+      "El payload necesita una pregunta de usuario.",
+      responseHeaders,
+    );
   }
 
   const usesEvaluationContext =
@@ -147,6 +230,7 @@ async function handleMiuraChatRequest(
         query: question,
         usesEvaluationContext,
       }),
+      responseHeaders,
     );
   }
 
@@ -163,7 +247,7 @@ async function handleMiuraChatRequest(
       error,
     });
 
-    return jsonError(503, MIURA_RETRIEVAL_ERROR_RESPONSE);
+    return jsonError(503, MIURA_RETRIEVAL_ERROR_RESPONSE, responseHeaders);
   }
 
   const citationsData = toMiuraChatCitationsData({
@@ -174,7 +258,7 @@ async function handleMiuraChatRequest(
   });
 
   if (!retrieval.hasSufficientSources) {
-    return createNoSourcesResponse(citationsData);
+    return createNoSourcesResponse(citationsData, responseHeaders);
   }
 
   let languageModel: LanguageModel;
@@ -190,7 +274,7 @@ async function handleMiuraChatRequest(
       error,
     });
 
-    return jsonError(503, MIURA_PROVIDER_ERROR_RESPONSE);
+    return jsonError(503, MIURA_PROVIDER_ERROR_RESPONSE, responseHeaders);
   }
 
   const systemPrompt = buildMiuraChatSystemPrompt({
@@ -240,9 +324,30 @@ async function handleMiuraChatRequest(
   });
 
   return createUIMessageStreamResponse({
-    headers: RESPONSE_HEADERS,
+    headers: responseHeaders,
     stream,
   });
+}
+
+function handleMiuraChatOptionsRequest(
+  request: Request,
+  dependencies: MiuraChatDependencies = {},
+) {
+  const logger = dependencies.logger ?? console;
+
+  try {
+    return createMiuraApiOptionsResponse(request, {
+      env: dependencies.env,
+    });
+  } catch (error) {
+    logMiuraServerError(logger, {
+      surface: "chat",
+      category: "config",
+      error,
+    });
+
+    return jsonError(503, MIURA_SECURITY_CONFIG_ERROR_RESPONSE);
+  }
 }
 
 function readMiuraChatConfig({
@@ -340,7 +445,10 @@ function toModelMessages(body: MiuraChatRequestBody): ModelMessage[] {
     .filter((message): message is ModelMessage => message !== null);
 }
 
-function createNoSourcesResponse(citationsData: MiuraChatCitationsData) {
+function createNoSourcesResponse(
+  citationsData: MiuraChatCitationsData,
+  headers: Record<string, string> = RESPONSE_HEADERS,
+) {
   const stream = createUIMessageStream({
     execute({ writer }) {
       writer.write({
@@ -379,7 +487,7 @@ function createNoSourcesResponse(citationsData: MiuraChatCitationsData) {
   });
 
   return createUIMessageStreamResponse({
-    headers: RESPONSE_HEADERS,
+    headers,
     stream,
   });
 }
@@ -594,7 +702,11 @@ function formatChatValidationError(error: {
   return `El payload del chat no es válido: ${path}: ${firstIssue.message}`;
 }
 
-function jsonError(status: number, message: string) {
+function jsonError(
+  status: number,
+  message: string,
+  headers: Record<string, string> = RESPONSE_HEADERS,
+) {
   return Response.json(
     {
       error: {
@@ -603,7 +715,7 @@ function jsonError(status: number, message: string) {
     },
     {
       status,
-      headers: RESPONSE_HEADERS,
+      headers,
     },
   );
 }
@@ -689,7 +801,9 @@ export {
   DEFAULT_OPENAI_CHAT_MODEL,
   MIURA_NO_SOURCES_RESPONSE,
   MIURA_PROVIDER_ERROR_RESPONSE,
+  MIURA_RATE_LIMIT_RESPONSE,
   buildMiuraChatSystemPrompt,
+  handleMiuraChatOptionsRequest,
   handleMiuraChatRequest,
   readMiuraChatConfig,
   type MiuraChatConfig,
