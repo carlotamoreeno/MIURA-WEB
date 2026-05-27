@@ -15,6 +15,7 @@
 /playwright-report
 /playwright-report-browsers
 /test-results
+/.playwright-mcp
 
 # next.js
 /.next/
@@ -46,6 +47,8 @@ next-env.d.ts
 
 /lib/generated/prisma
 *.md
+!README.md
+!docs/**/*.md
 !knowledge/**/*.md
 !supabase/README.md
 .agents

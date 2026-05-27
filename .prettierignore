@@ -2,3 +2,4 @@ supabase/.temp/
 supabase/migrations/*.sql
 .vercelignore
 playwright-report-browsers/
+.playwright-mcp/
