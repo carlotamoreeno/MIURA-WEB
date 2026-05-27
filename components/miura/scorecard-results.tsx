@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircleIcon,
@@ -17,6 +17,8 @@ import {
   type SeverityLevel,
 } from "@/components/miura/severity-indicator";
 import { ScenarioPanel } from "@/components/miura/scenario-panel";
+import { useMiuraAnalytics } from "@/lib/miura/analytics/client";
+import { getDebtSeverityBand } from "@/lib/miura/analytics/events";
 import {
   getMetricsByPillar,
   MIURA_DISCLAIMERS,
@@ -872,6 +874,8 @@ function ScorecardHeader({ data }: { data: ScorecardData }) {
 }
 
 function ScorecardResults({ evaluationId }: ScorecardResultsProps) {
+  const { trackMiuraAnalyticsEvent } = useMiuraAnalytics();
+  const trackedScorecardRef = useRef<string | undefined>(undefined);
   const [scorecardState, setScorecardState] = useState<ScorecardState>({
     status: "loading",
   });
@@ -889,6 +893,22 @@ function ScorecardResults({ evaluationId }: ScorecardResultsProps) {
       active = false;
     };
   }, [evaluationId]);
+
+  useEffect(() => {
+    if (
+      scorecardState.status !== "ready" ||
+      trackedScorecardRef.current === evaluationId
+    ) {
+      return;
+    }
+
+    trackedScorecardRef.current = evaluationId;
+    trackMiuraAnalyticsEvent("scorecard_viewed", {
+      DSBand: getDebtSeverityBand(scorecardState.data.calculationResult.DS),
+      dominantPillar: scorecardState.data.recommendationSet.dominantPillar,
+      coverageStatus: scorecardState.data.calculationResult.coverageStatus,
+    });
+  }, [evaluationId, scorecardState, trackMiuraAnalyticsEvent]);
 
   if (scorecardState.status === "loading") {
     return (

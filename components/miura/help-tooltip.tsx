@@ -20,6 +20,7 @@ type HelpTooltipProps = {
   triggerClassName?: string;
   contentClassName?: string;
   testId?: string;
+  onOpen?: () => void;
 };
 
 function HelpTooltip({
@@ -31,9 +32,10 @@ function HelpTooltip({
   triggerClassName,
   contentClassName,
   testId,
+  onOpen,
 }: HelpTooltipProps) {
   return (
-    <Tooltip>
+    <Tooltip onOpenChange={(open) => open && onOpen?.()}>
       <TooltipTrigger asChild>
         <Button
           type="button"

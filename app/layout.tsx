@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+
+import packageJson from "@/package.json";
+import { MiuraAnalyticsProvider } from "@/lib/miura/analytics/client";
+import { readMiuraAnalyticsEnabled } from "@/lib/miura/analytics/server";
 import { MiuraAppShell } from "@/components/miura/app-shell";
 import "./globals.css";
 
@@ -33,7 +37,12 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full">
-        <MiuraAppShell>{children}</MiuraAppShell>
+        <MiuraAnalyticsProvider
+          appVersion={packageJson.version}
+          enabled={readMiuraAnalyticsEnabled()}
+        >
+          <MiuraAppShell>{children}</MiuraAppShell>
+        </MiuraAnalyticsProvider>
       </body>
     </html>
   );

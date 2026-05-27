@@ -1,3 +1,6 @@
+"use client";
+
+import { useEffect, useRef } from "react";
 import {
   AlertCircleIcon,
   BarChart3Icon,
@@ -12,6 +15,7 @@ import {
   MIURA_PILLARS,
   MINIMUM_ECONOMIC_COVERAGE,
 } from "@/lib/miura/domain";
+import { useMiuraAnalytics } from "@/lib/miura/analytics/client";
 import {
   type CalculationResult,
   type Evaluation,
@@ -314,6 +318,19 @@ function ScenarioPanel({
   evaluation,
   project,
 }: ScenarioPanelProps) {
+  const { trackMiuraAnalyticsEvent } = useMiuraAnalytics();
+  const trackedScenarioPanelRef = useRef(false);
+
+  useEffect(() => {
+    if (trackedScenarioPanelRef.current) return;
+
+    trackedScenarioPanelRef.current = true;
+    trackMiuraAnalyticsEvent("scenario_panel_viewed", {
+      hasHourlyCost: hasPositiveHourlyCost(project),
+      horizonMonths: evaluation.horizonMonths,
+    });
+  }, [evaluation.horizonMonths, project, trackMiuraAnalyticsEvent]);
+
   return (
     <Card data-testid="scenario-panel">
       <CardHeader>

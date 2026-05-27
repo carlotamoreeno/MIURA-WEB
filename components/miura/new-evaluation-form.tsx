@@ -16,6 +16,7 @@ import {
   type DraftEvaluationFormField,
   type DraftEvaluationFormInput,
 } from "@/lib/miura/domain";
+import { useMiuraAnalytics } from "@/lib/miura/analytics/client";
 import { setTemporaryEvaluationSession } from "@/lib/miura/session/evaluation-session";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -74,6 +75,7 @@ function FieldValidationError({
 
 function NewEvaluationForm() {
   const router = useRouter();
+  const { trackMiuraAnalyticsEvent } = useMiuraAnalytics();
   const [formState, setFormState] = useState(initialFormState);
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<DraftEvaluationFormField, string>>
@@ -122,6 +124,13 @@ function NewEvaluationForm() {
     }
 
     setTemporaryEvaluationSession(result.data.localExport, "draft");
+    trackMiuraAnalyticsEvent("evaluation_created", {
+      methodology: result.data.project.methodology,
+      hasCapacity: result.data.project.monthlyCapacityHours > 0,
+      hasHourlyCost:
+        result.data.project.hourlyCost !== undefined &&
+        result.data.project.hourlyCost > 0,
+    });
     router.push(`/evaluacion/${result.data.evaluation.id}/wizard`);
   }
 
@@ -129,6 +138,13 @@ function NewEvaluationForm() {
     const example = buildPreloadedMiuraExampleSnapshot();
 
     setTemporaryEvaluationSession(example.localExport, "example");
+    trackMiuraAnalyticsEvent("evaluation_created", {
+      methodology: example.project.methodology,
+      hasCapacity: example.project.monthlyCapacityHours > 0,
+      hasHourlyCost:
+        example.project.hourlyCost !== undefined &&
+        example.project.hourlyCost > 0,
+    });
     router.push(`/evaluacion/${example.evaluation.id}/scorecard`);
   }
 

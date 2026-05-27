@@ -20,6 +20,7 @@ import {
   replaceMiuraLocalExport,
   type MiuraLocalStoreState,
 } from "@/lib/miura/session/local-store";
+import { useMiuraAnalytics } from "@/lib/miura/analytics/client";
 import { clearTemporaryEvaluationSessions } from "@/lib/miura/session/evaluation-session";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import {
@@ -90,6 +91,7 @@ function downloadTextFile({
 }
 
 function LocalSettingsManager() {
+  const { trackMiuraAnalyticsEvent } = useMiuraAnalytics();
   const [storeState, setStoreState] = useState<MiuraLocalStoreState>({
     mode: "persistent",
   });
@@ -126,6 +128,11 @@ function LocalSettingsManager() {
 
   function handleExport() {
     if (storeState.localExport === undefined) {
+      trackMiuraAnalyticsEvent("error_occurred", {
+        surface: "local_settings",
+        errorType: "local_export_empty",
+        nonSensitiveMessage: "No hay evaluaciones locales para exportar.",
+      });
       setMessage({
         variant: "error",
         text: "No hay evaluaciones locales para exportar.",
@@ -136,6 +143,11 @@ function LocalSettingsManager() {
     const serialized = serializeMiuraLocalExport(storeState.localExport);
 
     if (!serialized.success) {
+      trackMiuraAnalyticsEvent("error_occurred", {
+        surface: "local_settings",
+        errorType: "local_export_validation_failed",
+        nonSensitiveMessage: "La exportación local no ha pasado validación.",
+      });
       setMessage({
         variant: "error",
         text: serialized.message,
@@ -160,6 +172,11 @@ function LocalSettingsManager() {
     const parsed = parseMiuraLocalExportJson(content);
 
     if (!parsed.success) {
+      trackMiuraAnalyticsEvent("error_occurred", {
+        surface: "local_settings",
+        errorType: "local_import_validation_failed",
+        nonSensitiveMessage: "La importación JSON no ha pasado validación.",
+      });
       setMessage({
         variant: "error",
         text: parsed.message,
@@ -181,10 +198,15 @@ function LocalSettingsManager() {
   }
 
   function handleReset() {
+    const hadEvaluations = evaluations.length > 0;
+
     clearTemporaryEvaluationSessions();
     const nextState = clearMiuraLocalStore();
 
     setStoreState(nextState);
+    trackMiuraAnalyticsEvent("local_data_reset", {
+      hadEvaluations,
+    });
     setMessage({
       variant: "success",
       text: "Datos locales borrados en este navegador.",

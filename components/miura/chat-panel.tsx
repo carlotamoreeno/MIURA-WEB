@@ -22,6 +22,11 @@ import {
   parseMiuraChatCitationsData,
 } from "@/lib/miura/rag/chat-client";
 import {
+  bucketLatency,
+  bucketQuestionLength,
+} from "@/lib/miura/analytics/events";
+import { useMiuraAnalytics } from "@/lib/miura/analytics/client";
+import {
   formatCoverageStatusForChat,
   formatPillarForChat,
   formatRecommendationLevelForChat,
@@ -603,6 +608,7 @@ function LatestSourcesPanel({
 }
 
 function ChatPanel() {
+  const { trackMiuraAnalyticsEvent } = useMiuraAnalytics();
   const transport = useMemo(
     () =>
       new DefaultChatTransport<MiuraChatUiMessage>({
@@ -622,6 +628,9 @@ function ChatPanel() {
       status: "missing",
     });
   const scrollAnchorRef = useRef<HTMLDivElement>(null);
+  const pendingChatAnalyticsRef = useRef<{ startedAt: number } | undefined>(
+    undefined,
+  );
   const isBusy = status === "submitted" || status === "streaming";
   const effectiveUseEvaluationContext =
     useEvaluationContext && activeContext.status === "ready";
@@ -649,6 +658,46 @@ function ChatPanel() {
     });
   }, [messages, status]);
 
+  useEffect(() => {
+    const pendingAnalytics = pendingChatAnalyticsRef.current;
+
+    if (pendingAnalytics === undefined) return;
+
+    if (status === "error") {
+      pendingChatAnalyticsRef.current = undefined;
+      trackMiuraAnalyticsEvent("error_occurred", {
+        surface: "chat",
+        errorType: "transport_error",
+        nonSensitiveMessage: "No se ha podido completar la respuesta del chat.",
+      });
+      return;
+    }
+
+    if (status === "submitted" || status === "streaming") {
+      return;
+    }
+
+    const citationData = getLatestCitationData(messages);
+
+    if (citationData === undefined) return;
+
+    pendingChatAnalyticsRef.current = undefined;
+    trackMiuraAnalyticsEvent("chat_answer_completed", {
+      citationsCount: citationData.citations.length,
+      latencyBucket: bucketLatency(Date.now() - pendingAnalytics.startedAt),
+      retrievalCount: citationData.retrieval.retrievedChunks,
+    });
+
+    if (!citationData.hasSufficientSources) {
+      trackMiuraAnalyticsEvent("chat_no_sources", {
+        queryCategoryIfKnown:
+          citationData.retrieval.retrievedChunks === 0
+            ? "out_of_domain_or_guardrail"
+            : "corpus_gap",
+      });
+    }
+  }, [messages, status, trackMiuraAnalyticsEvent]);
+
   function buildRequestBody() {
     return {
       useEvaluationContext: effectiveUseEvaluationContext,
@@ -674,6 +723,13 @@ function ChatPanel() {
     }
 
     setInput("");
+    pendingChatAnalyticsRef.current = {
+      startedAt: Date.now(),
+    };
+    trackMiuraAnalyticsEvent("chat_question_sent", {
+      usesEvaluationContext: effectiveUseEvaluationContext,
+      questionLengthBucket: bucketQuestionLength(question.length),
+    });
 
     try {
       await sendMessage(
@@ -685,6 +741,12 @@ function ChatPanel() {
         },
       );
     } catch {
+      pendingChatAnalyticsRef.current = undefined;
+      trackMiuraAnalyticsEvent("error_occurred", {
+        surface: "chat",
+        errorType: "send_failed",
+        nonSensitiveMessage: "No se ha podido enviar la pregunta al chat.",
+      });
       // useChat exposes the controlled error state for rendering.
     }
   }

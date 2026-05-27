@@ -20,6 +20,7 @@ import {
   type MiuraChatRequestBody,
   type MiuraMinimalEvaluationContext,
 } from "./chat-contract";
+import { logMiuraServerError } from "@/lib/miura/analytics/server";
 import {
   DEFAULT_RAG_MATCH_THRESHOLD,
   DEFAULT_RAG_TOP_K,
@@ -109,7 +110,11 @@ async function handleMiuraChatRequest(
   try {
     config = readMiuraChatConfig({ env: dependencies.env });
   } catch (error) {
-    logSanitizedError(logger, "config", error);
+    logMiuraServerError(logger, {
+      surface: "chat",
+      category: "config",
+      error,
+    });
 
     return jsonError(
       503,
@@ -152,7 +157,11 @@ async function handleMiuraChatRequest(
       dependencies.retrieveKnowledge ?? retrieveMiuraKnowledge
     )(question);
   } catch (error) {
-    logSanitizedError(logger, "retrieval", error);
+    logMiuraServerError(logger, {
+      surface: "chat",
+      category: "retrieval",
+      error,
+    });
 
     return jsonError(503, MIURA_RETRIEVAL_ERROR_RESPONSE);
   }
@@ -175,7 +184,11 @@ async function handleMiuraChatRequest(
       dependencies.createLanguageModel ?? createOpenAiLanguageModel
     )(config);
   } catch (error) {
-    logSanitizedError(logger, "provider", error);
+    logMiuraServerError(logger, {
+      surface: "chat",
+      category: "provider",
+      error,
+    });
 
     return jsonError(503, MIURA_PROVIDER_ERROR_RESPONSE);
   }
@@ -539,20 +552,13 @@ function handleProviderStreamError(
   logger: Pick<Console, "error">,
   error: unknown,
 ) {
-  logSanitizedError(logger, "provider", error);
+  logMiuraServerError(logger, {
+    surface: "chat",
+    category: "provider",
+    error,
+  });
 
   return MIURA_PROVIDER_ERROR_RESPONSE;
-}
-
-function logSanitizedError(
-  logger: Pick<Console, "error">,
-  category: "config" | "retrieval" | "provider",
-  error: unknown,
-) {
-  logger.error("[MIURA chat] controlled failure", {
-    category,
-    name: error instanceof Error ? error.name : typeof error,
-  });
 }
 
 async function readRequestJson(

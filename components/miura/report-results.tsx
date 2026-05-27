@@ -27,6 +27,7 @@ import {
   type MiuraReportData,
   type MiuraReportMetricRow,
 } from "@/lib/miura/domain";
+import { useMiuraAnalytics } from "@/lib/miura/analytics/client";
 import {
   resolveMiuraEvaluationResult,
   type MiuraEvaluationResultData,
@@ -127,17 +128,39 @@ function ReportActions({
   report: MiuraReportData;
   onMessage: (message: ReportMessage) => void;
 }) {
+  const { trackMiuraAnalyticsEvent } = useMiuraAnalytics();
+
+  function trackReportExport(format: "markdown" | "clipboard" | "print") {
+    trackMiuraAnalyticsEvent("report_exported", {
+      format,
+      coverageStatus: report.calculationResult.coverageStatus,
+    });
+  }
+
+  function trackReportError(errorType: string, nonSensitiveMessage: string) {
+    trackMiuraAnalyticsEvent("error_occurred", {
+      surface: "report",
+      errorType,
+      nonSensitiveMessage,
+    });
+  }
+
   function handleDownload() {
     try {
       downloadMarkdownFile({
         filename: reportFilename(report),
         content: markdown,
       });
+      trackReportExport("markdown");
       onMessage({
         variant: "success",
         text: "Informe Markdown generado con los bloques visibles del diagnóstico MIURA.",
       });
     } catch {
+      trackReportError(
+        "download_failed",
+        "No se ha podido descargar el informe Markdown.",
+      );
       onMessage({
         variant: "error",
         text: "No se ha podido descargar el Markdown. Usa copiar Markdown como alternativa.",
@@ -147,6 +170,10 @@ function ReportActions({
 
   async function handleCopy() {
     if (navigator.clipboard === undefined) {
+      trackReportError(
+        "clipboard_unavailable",
+        "El navegador no permite copiar automáticamente.",
+      );
       onMessage({
         variant: "error",
         text: "El navegador no permite copiar automáticamente. Puedes usar la descarga Markdown o imprimir.",
@@ -156,11 +183,16 @@ function ReportActions({
 
     try {
       await navigator.clipboard.writeText(markdown);
+      trackReportExport("clipboard");
       onMessage({
         variant: "success",
         text: "Contenido Markdown copiado al portapapeles.",
       });
     } catch {
+      trackReportError(
+        "clipboard_failed",
+        "No se ha podido copiar el informe Markdown.",
+      );
       onMessage({
         variant: "error",
         text: "No se ha podido copiar el Markdown. Reintenta la descarga o usa la vista imprimible.",
@@ -169,6 +201,7 @@ function ReportActions({
   }
 
   function handlePrint() {
+    trackReportExport("print");
     window.print();
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import {
   AlertCircleIcon,
@@ -33,6 +33,7 @@ import {
   type Pillar,
   type SimpleLevel,
 } from "@/lib/miura/schemas";
+import { useMiuraAnalytics } from "@/lib/miura/analytics/client";
 import {
   getTemporaryEvaluationSession,
   updateTemporaryEvaluationSession,
@@ -305,6 +306,7 @@ function SimpleLevelPicker({
 }
 
 function MetricHelpTooltip({ metric }: { metric: MetricDefinition }) {
+  const { trackMiuraAnalyticsEvent } = useMiuraAnalytics();
   const protectiveCopy =
     metric.riskDirection === "higher_is_better"
       ? "Métrica protectora: una valoración alta reduce severidad porque protege al equipo o al sistema."
@@ -317,6 +319,12 @@ function MetricHelpTooltip({ metric }: { metric: MetricDefinition }) {
       ariaLabel={`Ayuda contextual de ${metric.id}`}
       testId={`metric-${metric.id}-help`}
       side="left"
+      onOpen={() =>
+        trackMiuraAnalyticsEvent("metric_help_opened", {
+          metricId: metric.id,
+          surface: "wizard",
+        })
+      }
     >
       <span className="text-background/80">
         Modo simple: bajo, medio o alto según la rúbrica visible en la tarjeta.
@@ -618,6 +626,7 @@ function MissingSessionAlert() {
 }
 
 function MetricWizard({ evaluationId }: MetricWizardProps) {
+  const { trackMiuraAnalyticsEvent } = useMiuraAnalytics();
   const [loaded, setLoaded] = useState(false);
   const [session, setSession] = useState<
     TemporaryEvaluationSession | undefined
@@ -633,8 +642,13 @@ function MetricWizard({ evaluationId }: MetricWizardProps) {
   );
   const summary = useMemo(() => summarizeMetricWizardInputs(inputs), [inputs]);
   const currentPillar = MIURA_PILLARS[activePillarIndex] ?? MIURA_PILLARS[0];
+  const pillarStartedAtRef = useRef<number | undefined>(undefined);
   const readyForScorecard =
     session?.evaluation.status === "ready_for_scorecard";
+
+  useEffect(() => {
+    pillarStartedAtRef.current = Date.now();
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -679,6 +693,28 @@ function MetricWizard({ evaluationId }: MetricWizardProps) {
   function setWizardMessage(nextMessage: string, variant: "success" | "error") {
     setMessage(nextMessage);
     setMessageVariant(variant);
+  }
+
+  function selectPillarIndex(index: number) {
+    pillarStartedAtRef.current = Date.now();
+    setActivePillarIndex(index);
+  }
+
+  function trackWizardStepCompleted(pillar: Pillar) {
+    const pillarProgress = summary.byPillar.find(
+      (item) => item.pillar === pillar,
+    );
+    const startedAt = pillarStartedAtRef.current ?? Date.now();
+    const durationMs = Math.min(
+      24 * 60 * 60 * 1000,
+      Math.max(0, Date.now() - startedAt),
+    );
+
+    trackMiuraAnalyticsEvent("wizard_step_completed", {
+      pillar,
+      coverage: pillarProgress?.coverage ?? 0,
+      durationMs,
+    });
   }
 
   function updateMetricInput(metricId: MetricId, patch: MetricInputPatch) {
@@ -748,8 +784,10 @@ function MetricWizard({ evaluationId }: MetricWizardProps) {
 
     if (updatedSession === undefined) return;
 
+    trackWizardStepCompleted(currentPillar.id);
+
     if (activePillarIndex < MIURA_PILLARS.length - 1) {
-      setActivePillarIndex((currentIndex) => currentIndex + 1);
+      selectPillarIndex(activePillarIndex + 1);
       setWizardMessage(
         `${currentPillar.label} guardado. Continúa con el siguiente pilar.`,
         "success",
@@ -768,6 +806,7 @@ function MetricWizard({ evaluationId }: MetricWizardProps) {
 
     if (updatedSession === undefined) return;
 
+    trackWizardStepCompleted(currentPillar.id);
     setWizardMessage(
       "Wizard completado. La evaluación queda lista para generar la scorecard en la siguiente pantalla.",
       "success",
@@ -779,7 +818,7 @@ function MetricWizard({ evaluationId }: MetricWizardProps) {
       <PillarStepper
         activePillar={currentPillar.id}
         inputs={inputs}
-        onSelectPillar={setActivePillarIndex}
+        onSelectPillar={selectPillarIndex}
       />
 
       <WizardMessage message={message} variant={messageVariant} />
@@ -848,9 +887,7 @@ function MetricWizard({ evaluationId }: MetricWizardProps) {
                 variant="outline"
                 disabled={activePillarIndex === 0}
                 onClick={() =>
-                  setActivePillarIndex((currentIndex) =>
-                    Math.max(0, currentIndex - 1),
-                  )
+                  selectPillarIndex(Math.max(0, activePillarIndex - 1))
                 }
               >
                 <ArrowLeftIcon />
