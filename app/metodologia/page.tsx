@@ -112,13 +112,13 @@ export default function MethodologyPage() {
             </Link>
           </Button>
           <Button asChild size="lg" variant="outline" className="sm:w-fit">
-            <Link href="/glosario">
+            <Link href="/glosario" prefetch={false}>
               <BookOpenTextIcon />
               Ver glosario
             </Link>
           </Button>
           <Button asChild size="lg" variant="outline" className="sm:w-fit">
-            <Link href="/chat">
+            <Link href="/chat" prefetch={false}>
               <MessageSquareTextIcon />
               Preguntar a MIURA
             </Link>
@@ -309,7 +309,9 @@ export default function MethodologyPage() {
                 </Link>
               </Button>
               <Button asChild variant="outline" className="sm:w-fit">
-                <Link href="/scrum-kanban">Ver integración Scrum/Kanban</Link>
+                <Link href="/scrum-kanban" prefetch={false}>
+                  Ver integración Scrum/Kanban
+                </Link>
               </Button>
             </div>
           </div>

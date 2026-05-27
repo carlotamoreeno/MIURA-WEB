@@ -82,6 +82,7 @@ function NavigationLink({ item }: { item: MiuraNavigationItem }) {
       >
         <Link
           href={item.href}
+          prefetch={false}
           aria-current={isActive ? "page" : undefined}
           data-testid={`nav-${item.key}`}
           onClick={() => setOpenMobile(false)}
@@ -182,6 +183,7 @@ function MiuraAppShell({ children }: { children: React.ReactNode }) {
           <SidebarHeader className="gap-3 p-3">
             <Link
               href="/"
+              prefetch={false}
               className="focus-visible:ring-ring flex items-center gap-3 rounded-md p-2 outline-none focus-visible:ring-2"
             >
               <span
@@ -256,7 +258,7 @@ function MiuraAppShell({ children }: { children: React.ReactNode }) {
                   Demo sin login
                 </Badge>
                 <Button asChild size="sm" variant="outline">
-                  <Link href="/chat">
+                  <Link href="/chat" prefetch={false}>
                     <MessageSquareTextIcon />
                     Chat
                   </Link>

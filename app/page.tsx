@@ -63,7 +63,7 @@ export default function Home() {
             </Link>
           </Button>
           <Button asChild size="lg" variant="outline" className="sm:w-fit">
-            <Link href="/chat">
+            <Link href="/chat" prefetch={false}>
               <MessageSquareTextIcon />
               Preguntar a MIURA
             </Link>
@@ -141,6 +141,7 @@ export default function Home() {
           <span className="mt-2 block">{MIURA_DISCLAIMERS.economic}</span>
           <Link
             href="/glosario"
+            prefetch={false}
             className="text-info-foreground mt-3 inline-flex font-medium underline-offset-4 hover:underline"
           >
             Ver glosario de siglas y fórmulas

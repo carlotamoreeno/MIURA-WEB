@@ -3,6 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "packageManager": "npm@11.10.0",
+  "engines": {
+    "node": ">=20.9"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
@@ -14,7 +17,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:e2e:browsers": "playwright test --config=playwright.browsers.config.ts",
     "audit": "npm audit --audit-level=moderate",
+    "audit:critical": "npm audit --audit-level=critical",
+    "perf:lighthouse": "tsx scripts/run-lighthouse-performance.ts",
     "rag:ingest": "tsx scripts/ingest-knowledge.ts --expect-documents=7 --expect-chunks=10",
     "rag:ingest:dry-run": "tsx scripts/ingest-knowledge.ts --dry-run --expect-documents=7 --expect-chunks=10"
   },

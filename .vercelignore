@@ -1,0 +1,9 @@
+.env
+.env.*
+.next
+node_modules
+playwright-report
+playwright-report-browsers
+test-results
+supabase/.temp
+tsconfig.tsbuildinfo

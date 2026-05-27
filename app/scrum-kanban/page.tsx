@@ -112,13 +112,13 @@ export default function ScrumKanbanPage() {
             </Link>
           </Button>
           <Button asChild size="lg" variant="outline" className="sm:w-fit">
-            <Link href="/metodologia">
+            <Link href="/metodologia" prefetch={false}>
               <ListChecksIcon />
               Ver metodología
             </Link>
           </Button>
           <Button asChild size="lg" variant="outline" className="sm:w-fit">
-            <Link href="/chat">
+            <Link href="/chat" prefetch={false}>
               <MessageSquareTextIcon />
               Preguntar a MIURA
             </Link>
@@ -348,7 +348,9 @@ export default function ScrumKanbanPage() {
                 </Link>
               </Button>
               <Button asChild variant="outline" className="sm:w-fit">
-                <Link href="/glosario">Consultar glosario</Link>
+                <Link href="/glosario" prefetch={false}>
+                  Consultar glosario
+                </Link>
               </Button>
             </div>
           </div>
