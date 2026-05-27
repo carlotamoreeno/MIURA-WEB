@@ -853,8 +853,8 @@ function MetricWizard({ evaluationId }: MetricWizardProps) {
         </Alert>
       )}
 
-      <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
-        <aside className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+      <div className="grid min-w-0 gap-6 lg:grid-cols-[300px_minmax(0,1fr)]">
+        <aside className="min-w-0 space-y-4 lg:sticky lg:top-24 lg:self-start">
           <WizardProgressPanel inputs={inputs} />
           <Card>
             <CardHeader>
@@ -868,7 +868,7 @@ function MetricWizard({ evaluationId }: MetricWizardProps) {
           </Card>
         </aside>
 
-        <section className="space-y-6">
+        <section className="min-w-0 space-y-6">
           <CurrentPillarStep
             pillar={currentPillar}
             inputs={inputs}
@@ -876,12 +876,12 @@ function MetricWizard({ evaluationId }: MetricWizardProps) {
             onChangeMetric={updateMetricInput}
           />
 
-          <div className="border-border bg-background flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="border-border bg-background flex flex-col gap-3 rounded-lg border p-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="text-muted-foreground text-sm leading-6">
               El guardado actualiza la evaluación local de este navegador. Si el
               almacenamiento falla, MIURA lo mantendrá solo en la sesión actual.
             </div>
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center lg:justify-end">
               <Button
                 type="button"
                 variant="outline"

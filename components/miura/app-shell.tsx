@@ -266,6 +266,7 @@ function MiuraAppShell({ children }: { children: React.ReactNode }) {
           </header>
           <div
             id="contenido"
+            tabIndex={-1}
             className={cn("min-h-[calc(100svh-4rem)] bg-background")}
           >
             {children}

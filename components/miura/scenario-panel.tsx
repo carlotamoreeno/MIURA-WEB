@@ -167,7 +167,7 @@ function ScenarioItem({
     >
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 space-y-1">
-          <h4 className="font-medium">{scenarioLabels[scenario.scenario]}</h4>
+          <p className="font-medium">{scenarioLabels[scenario.scenario]}</p>
           <p className="text-muted-foreground text-sm leading-6">
             {scenarioDescriptions[scenario.scenario]}
           </p>
@@ -268,7 +268,7 @@ function PrincipalBreakEven({
     >
       <div className="flex items-center gap-2">
         <CalculatorIcon aria-hidden="true" className="text-primary size-4" />
-        <h4 className="font-medium">Principal y break-even heurístico</h4>
+        <p className="font-medium">Principal y break-even heurístico</p>
       </div>
       <div className="mt-4 grid gap-3">
         {calculationResult.principal !== undefined && (
