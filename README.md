@@ -29,7 +29,7 @@ El proyecto cubre de forma directa cuatro unidades del enunciado de la practica:
 - **Unidad 5 - RAG y bases vectoriales:** el repositorio incluye un pipeline RAG
   completo: corpus Markdown, manifest, checksums, chunking, embeddings
   `text-embedding-3-small`, Supabase pgvector, busqueda semantica por RPC,
-    umbral de similitud, top-k y citas visibles en la interfaz.
+  umbral de similitud, top-k y citas visibles en la interfaz.
 
 ## Arquitectura
 
