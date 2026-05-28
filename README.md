@@ -16,19 +16,16 @@ El proyecto cubre de forma directa cuatro unidades del enunciado de la practica:
   un LLM de OpenAI para responder en espanol sobre el corpus controlado del
   proyecto. El modelo se limita con contexto recuperado y avisos metodologicos
   para evitar presentar la deuda tecnica como una verdad contable exacta.
-  
 - **Unidad 2 - Prompt Engineering:** el chat usa un system prompt estructurado
   con rol, tono, restricciones de fuentes, politica anti-alucinacion,
   instrucciones contra prompt injection, contexto recuperado y contexto minimo
   opcional de evaluacion. No se usa chain-of-thought explicito porque la demo
   prioriza respuestas auditables con citas, no razonamiento oculto expuesto.
-  
 - **Unidad 3 - Transformers y APIs:** la aplicacion accede programaticamente
   a OpenAI mediante SDKs desde rutas y scripts server-side,
   tanto para embeddings como para chat streaming. El codigo valida payloads,
   controla errores de proveedor, aplica timeouts, limita coste y no expone
   claves al cliente.
-  
 - **Unidad 5 - RAG y bases vectoriales:** el repositorio incluye un pipeline RAG
   completo: corpus Markdown, manifest, checksums, chunking, embeddings
   `text-embedding-3-small`, Supabase pgvector, busqueda semantica por RPC,
