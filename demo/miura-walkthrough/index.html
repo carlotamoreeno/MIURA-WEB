@@ -1,0 +1,1459 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MIURA Web App MVP 0.1 | Demo visual guiada</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #092326;
+        --muted: #486269;
+        --subtle: #eff7f7;
+        --panel: #ffffff;
+        --line: #c9dcde;
+        --brand: #006064;
+        --brand-2: #0f766e;
+        --accent: #d9f0f3;
+        --warn: #d9872b;
+        --shadow: 0 18px 45px rgba(9, 35, 38, 0.12);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        background:
+          radial-gradient(
+            circle at top left,
+            rgba(0, 96, 100, 0.11),
+            transparent 32rem
+          ),
+          linear-gradient(180deg, #f8fcfc 0%, #eef7f7 42%, #f8fbfb 100%);
+        color: var(--ink);
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+        line-height: 1.55;
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .shell {
+        width: min(1180px, calc(100% - 32px));
+        margin: 0 auto;
+      }
+
+      .hero {
+        padding: 56px 0 34px;
+      }
+
+      .eyebrow,
+      .kicker {
+        display: inline-flex;
+        width: fit-content;
+        align-items: center;
+        gap: 8px;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.72);
+        color: var(--brand);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        padding: 5px 10px;
+        text-transform: uppercase;
+      }
+
+      h1,
+      h2,
+      h3 {
+        letter-spacing: 0;
+        line-height: 1.12;
+      }
+
+      h1 {
+        max-width: 860px;
+        margin: 18px 0 16px;
+        font-size: clamp(2.45rem, 6vw, 5.2rem);
+      }
+
+      .hero p {
+        max-width: 760px;
+        color: var(--muted);
+        font-size: 1.12rem;
+      }
+
+      .summary-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 26px;
+      }
+
+      .summary-card,
+      .panel,
+      .step,
+      .flow-card {
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.86);
+        box-shadow: var(--shadow);
+      }
+
+      .summary-card {
+        padding: 18px;
+      }
+
+      .summary-card strong {
+        display: block;
+        font-size: 1.2rem;
+      }
+
+      .summary-card span {
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      .manual-strip {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin-top: 18px;
+        border: 1px solid var(--line);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.78);
+        padding: 16px 18px;
+      }
+
+      .manual-strip strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+
+      .manual-strip p {
+        margin: 0;
+      }
+
+      .manual-link {
+        flex: 0 0 auto;
+        border-radius: 999px;
+        background: var(--brand);
+        color: #ffffff;
+        font-weight: 800;
+        padding: 10px 14px;
+        text-decoration: none;
+      }
+
+      .section {
+        padding: 28px 0;
+      }
+
+      .section-header {
+        display: flex;
+        align-items: end;
+        justify-content: space-between;
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+
+      .section-header h2 {
+        margin: 10px 0 0;
+        font-size: clamp(1.6rem, 4vw, 2.5rem);
+      }
+
+      .section-header p {
+        max-width: 680px;
+        margin: 8px 0 0;
+        color: var(--muted);
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+      }
+
+      .flow-card {
+        position: relative;
+        min-height: 132px;
+        padding: 16px;
+      }
+
+      .flow-card::after {
+        content: ">";
+        position: absolute;
+        right: -11px;
+        top: 50%;
+        z-index: 1;
+        width: 22px;
+        height: 22px;
+        border-radius: 50%;
+        background: var(--brand);
+        color: #fff;
+        font-size: 0.8rem;
+        font-weight: 800;
+        line-height: 22px;
+        text-align: center;
+        transform: translateY(-50%);
+      }
+
+      .flow-card:nth-child(4)::after,
+      .flow-card:nth-child(8)::after {
+        content: "";
+        display: none;
+      }
+
+      .flow-card span {
+        color: var(--brand);
+        font-size: 0.78rem;
+        font-weight: 800;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .flow-card h3 {
+        margin: 10px 0 8px;
+        font-size: 1.05rem;
+      }
+
+      .flow-card p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+
+      .sequence {
+        display: grid;
+        gap: 28px;
+      }
+
+      .step {
+        overflow: clip;
+      }
+
+      .step-head {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 18px;
+        border-bottom: 1px solid var(--line);
+        padding: 22px 24px;
+      }
+
+      .step-number {
+        display: inline-grid;
+        width: 38px;
+        height: 38px;
+        place-items: center;
+        border-radius: 999px;
+        background: var(--brand);
+        color: #fff;
+        font-weight: 800;
+      }
+
+      .step-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .step-title h3 {
+        margin: 0;
+        font-size: clamp(1.25rem, 3vw, 1.9rem);
+      }
+
+      .route {
+        align-self: start;
+        border: 1px solid var(--line);
+        border-radius: 999px;
+        background: var(--subtle);
+        color: var(--brand);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+        font-size: 0.78rem;
+        padding: 7px 10px;
+      }
+
+      .step-body {
+        display: grid;
+        grid-template-columns: minmax(0, 1.35fr) minmax(260px, 0.65fr);
+        gap: 22px;
+        padding: 24px;
+      }
+
+      .step-body.stack {
+        grid-template-columns: 1fr;
+      }
+
+      .asset-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 16px;
+      }
+
+      .asset-grid.three {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .frame {
+        position: relative;
+        overflow: hidden;
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fff;
+      }
+
+      .frame img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .frame.tall {
+        max-height: 720px;
+        overflow: auto;
+      }
+
+      .caption {
+        border-top: 1px solid var(--line);
+        background: #f6fbfb;
+        color: var(--muted);
+        font-size: 0.86rem;
+        padding: 9px 12px;
+      }
+
+      .pin {
+        position: absolute;
+        left: var(--x);
+        top: var(--y);
+        display: grid;
+        width: 30px;
+        height: 30px;
+        place-items: center;
+        border: 2px solid #fff;
+        border-radius: 999px;
+        background: var(--brand);
+        box-shadow: 0 8px 20px rgba(0, 96, 100, 0.35);
+        color: #fff;
+        font-size: 0.86rem;
+        font-weight: 900;
+        transform: translate(-50%, -50%);
+      }
+
+      .spotlight {
+        position: absolute;
+        left: var(--x);
+        top: var(--y);
+        width: var(--w);
+        height: var(--h);
+        border: 3px solid var(--warn);
+        border-radius: 10px;
+        box-shadow:
+          0 0 0 999px rgba(9, 35, 38, 0.04),
+          0 0 0 5px rgba(217, 135, 43, 0.15);
+        pointer-events: none;
+      }
+
+      .notes {
+        display: grid;
+        gap: 12px;
+        align-content: start;
+      }
+
+      .note {
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: #fbfefe;
+        padding: 14px;
+      }
+
+      .note b {
+        display: inline-grid;
+        width: 26px;
+        height: 26px;
+        margin-right: 8px;
+        place-items: center;
+        border-radius: 999px;
+        background: var(--brand);
+        color: #fff;
+        font-size: 0.8rem;
+      }
+
+      .note p {
+        margin: 8px 0 0;
+        color: var(--muted);
+      }
+
+      .panel {
+        padding: 22px;
+      }
+
+      .panel h3 {
+        margin-top: 0;
+      }
+
+      .panel ul {
+        margin: 0;
+        padding-left: 1.2rem;
+        color: var(--muted);
+      }
+
+      .status {
+        border-left: 4px solid var(--warn);
+        background: #fff9ef;
+      }
+
+      .footer {
+        padding: 32px 0 56px;
+        color: var(--muted);
+        font-size: 0.92rem;
+      }
+
+      @media (max-width: 980px) {
+        .summary-grid,
+        .flow,
+        .step-body,
+        .asset-grid,
+        .asset-grid.three {
+          grid-template-columns: 1fr;
+        }
+
+        .manual-strip {
+          align-items: stretch;
+          flex-direction: column;
+        }
+
+        .manual-link {
+          width: fit-content;
+        }
+
+        .flow-card::after {
+          content: "v";
+          left: 50%;
+          right: auto;
+          top: auto;
+          bottom: -18px;
+          transform: translateX(-50%);
+        }
+
+        .flow-card:nth-child(4)::after {
+          display: grid;
+          content: "v";
+        }
+
+        .step-head {
+          grid-template-columns: 1fr;
+        }
+
+        .route {
+          width: fit-content;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero shell">
+      <span class="eyebrow">Demo visual MIURA MVP 0.1</span>
+      <h1>
+        Recorrido guiado para explicar la deuda técnica en lenguaje de negocio.
+      </h1>
+      <p>
+        Este guion visual usa pantallas capturadas de MIURA Web App para mostrar
+        el flujo completo de usuario: iniciar una evaluación local, completar
+        evidencia, leer resultados ejecutivos y técnicos, exportar un informe,
+        gestionar datos locales y consultar la metodología o la conversación de
+        apoyo.
+      </p>
+      <div class="summary-grid" aria-label="Resumen de la demo">
+        <div class="summary-card">
+          <strong>24</strong><span>recursos visuales</span>
+        </div>
+        <div class="summary-card">
+          <strong>10</strong><span>rutas MVP cubiertas</span>
+        </div>
+        <div class="summary-card">
+          <strong>3</strong><span>comprobaciones móviles</span>
+        </div>
+        <div class="summary-card">
+          <strong>0</strong
+          ><span>persistencia de datos de usuario en servidor</span>
+        </div>
+      </div>
+      <div class="manual-strip" aria-label="Manual de usuario complementario">
+        <div>
+          <strong>Manual de usuario paso a paso</strong>
+          <p>
+            Además del storyboard visual, la demo incluye una guía práctica para
+            usar MIURA: creación, asistente, cuadro de mando, informe, ajustes,
+            chat RAG y preguntas frecuentes.
+          </p>
+        </div>
+        <a class="manual-link" href="manual-usuario.md">Abrir manual</a>
+      </div>
+    </header>
+
+    <main>
+      <section class="section shell" aria-labelledby="flow-title">
+        <div class="section-header">
+          <div>
+            <span class="kicker">Mapa del flujo de producto</span>
+            <h2 id="flow-title">
+              La demo sigue una ruta principal de decisión y después abre las
+              pantallas de apoyo.
+            </h2>
+            <p>
+              El orden refleja el modelo mental que necesita quien mira la demo:
+              entender por qué existe MIURA, introducir contexto local, recoger
+              evidencia, interpretar resultados, exportar el artefacto y usar el
+              conocimiento de apoyo.
+            </p>
+          </div>
+        </div>
+        <div class="flow" role="list">
+          <article class="flow-card" role="listitem">
+            <span>01</span>
+            <h3>Inicio</h3>
+            <p>
+              Presenta el valor, el encuadre sin login y las llamadas a la
+              acción principales.
+            </p>
+          </article>
+          <article class="flow-card" role="listitem">
+            <span>02</span>
+            <h3>Crear evaluación</h3>
+            <p>
+              Recoge proyecto, metodología, horizonte, capacidad y coste
+              opcional.
+            </p>
+          </article>
+          <article class="flow-card" role="listitem">
+            <span>03</span>
+            <h3>Asistente</h3>
+            <p>
+              Recoge doce métricas MIURA en tres pilares con cobertura
+              explícita.
+            </p>
+          </article>
+          <article class="flow-card" role="listitem">
+            <span>04</span>
+            <h3>Cuadro de mando</h3>
+            <p>
+              Lee severidad, pilar dominante, acciones e impacto por escenarios.
+            </p>
+          </article>
+          <article class="flow-card" role="listitem">
+            <span>05</span>
+            <h3>Técnica</h3>
+            <p>Expone fórmulas, pesos, trazabilidad, supuestos y avisos.</p>
+          </article>
+          <article class="flow-card" role="listitem">
+            <span>06</span>
+            <h3>Informe</h3>
+            <p>
+              Convierte la evaluación en una salida descargable e imprimible.
+            </p>
+          </article>
+          <article class="flow-card" role="listitem">
+            <span>07</span>
+            <h3>Ajustes locales</h3>
+            <p>Exporta, importa, revisa o borra datos locales del navegador.</p>
+          </article>
+          <article class="flow-card" role="listitem">
+            <span>08</span>
+            <h3>Conversación y conocimiento</h3>
+            <p>
+              Pregunta a MIURA, revisa páginas de apoyo y mantiene visible la
+              metodología.
+            </p>
+          </article>
+        </div>
+      </section>
+
+      <section class="section shell" aria-labelledby="sequence-title">
+        <div class="section-header">
+          <div>
+            <span class="kicker">Secuencia ordenada de la demo</span>
+            <h2 id="sequence-title">Guion visual secuencial</h2>
+            <p>
+              Cada paso incluye la captura de pantalla, los puntos de interfaz
+              destacados y por qué ese momento importa en la historia del
+              producto.
+            </p>
+          </div>
+        </div>
+
+        <div class="sequence">
+          <article class="step" id="step-1">
+            <div class="step-head">
+              <div class="step-title">
+                <span class="step-number">1</span>
+                <h3>Empezar con valor de negocio y confianza sin login.</h3>
+              </div>
+              <span class="route">/</span>
+            </div>
+            <div class="step-body">
+              <div class="frame">
+                <img
+                  src="assets/01-landing.png"
+                  alt="Página inicial de MIURA con propuesta de valor y acciones principales"
+                />
+                <span class="pin" style="--x: 31%; --y: 46%">1</span>
+                <span class="pin" style="--x: 9%; --y: 50%">2</span>
+                <span class="pin" style="--x: 85%; --y: 71%">3</span>
+                <div class="caption">
+                  Página inicial: propuesta de valor, navegación y las dos
+                  primeras decisiones del usuario.
+                </div>
+              </div>
+              <div class="notes">
+                <div class="note">
+                  <b>1</b>Llamada a la acción principal
+                  <p>
+                    "Crear evaluación MIURA" inicia el diagnóstico local guiado.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>2</b>Navegación persistente
+                  <p>
+                    La navegación lateral anticipa todo el MVP: evaluación,
+                    informe, conversación y páginas de conocimiento.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>3</b>Posicionamiento sin login
+                  <p>
+                    La primera pantalla presenta explícitamente MIURA como una
+                    demo local de navegador sin cuentas.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="step" id="step-2">
+            <div class="step-head">
+              <div class="step-title">
+                <span class="step-number">2</span>
+                <h3>
+                  Crear una evaluación local con el contexto de negocio justo.
+                </h3>
+              </div>
+              <span class="route">/evaluacion/nueva</span>
+            </div>
+            <div class="step-body stack">
+              <div class="asset-grid">
+                <div class="frame">
+                  <img
+                    src="assets/02-new-evaluation.png"
+                    alt="Parte superior de nueva evaluación con introducción del formulario"
+                  />
+                  <span class="pin" style="--x: 50%; --y: 62%">1</span>
+                  <span class="pin" style="--x: 85%; --y: 66%">2</span>
+                  <div class="caption">
+                    Parte superior del formulario: identidad del proyecto y
+                    explicación local/sin servidor.
+                  </div>
+                </div>
+                <div class="frame">
+                  <img
+                    src="assets/02b-new-evaluation-actions.png"
+                    alt="Formulario de nueva evaluación con capacidad, coste y botones para crear o cargar ejemplo"
+                  />
+                  <span class="pin" style="--x: 60%; --y: 58%">3</span>
+                  <span class="pin" style="--x: 31%; --y: 90%">4</span>
+                  <span class="pin" style="--x: 44%; --y: 90%">5</span>
+                  <div class="caption">
+                    Parte inferior del formulario: entradas de escenarios y
+                    botones de acción.
+                  </div>
+                </div>
+              </div>
+              <div class="notes">
+                <div class="note">
+                  <b>1</b>Campos del proyecto
+                  <p>
+                    El usuario nombra la organización y el proyecto sin email,
+                    contraseña ni creación de cuenta.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>2</b>Aviso de privacidad
+                  <p>
+                    El panel lateral refuerza que los datos de evaluación son
+                    locales al navegador.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>3</b>Entradas de escenarios
+                  <p>
+                    La capacidad, el horizonte y el coste hora opcional
+                    alimentan los escenarios posteriores de capacidad y
+                    economía.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>4</b>Crear evaluación
+                  <p>Crea un borrador local y lleva al usuario al asistente.</p>
+                </div>
+                <div class="note">
+                  <b>5</b>Cargar ejemplo
+                  <p>
+                    Carga un caso demo reproducible para recorrer el cuadro de
+                    mando y el informe.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="step" id="step-3">
+            <div class="step-head">
+              <div class="step-title">
+                <span class="step-number">3</span>
+                <h3>Guiar la recogida de métricas por pilar y cobertura.</h3>
+              </div>
+              <span class="route">/evaluacion/evaluation-demo/wizard</span>
+            </div>
+            <div class="step-body">
+              <div class="frame">
+                <img
+                  src="assets/03-wizard-overview.png"
+                  alt="Vista general del asistente con resumen local, pasos por pilar y progreso"
+                />
+                <span class="pin" style="--x: 72%; --y: 32%">1</span>
+                <span class="pin" style="--x: 58%; --y: 53%">2</span>
+                <span class="pin" style="--x: 35%; --y: 74%">3</span>
+                <span class="pin" style="--x: 92%; --y: 69%">4</span>
+                <div class="caption">
+                  Vista general del asistente: contexto local, tres pilares,
+                  cobertura y preparación para el cuadro de mando.
+                </div>
+              </div>
+              <div class="notes">
+                <div class="note">
+                  <b>1</b>Resumen de sesión local
+                  <p>
+                    Muestra proyecto, metodología, capacidad y horizonte antes
+                    de introducir evidencia.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>2</b>Pasos de tres pilares
+                  <p>
+                    CDI, DDI y PDI aparecen como pasos separados con métricas
+                    respondidas y cobertura.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>3</b>Panel de progreso
+                  <p>
+                    La cobertura se separa de la finalización, por lo que las
+                    métricas no disponibles reducen la confianza.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>4</b>Transición al cuadro de mando
+                  <p>
+                    Cuando está lista, el asistente ofrece una transición
+                    directa a resultados.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="step" id="step-4">
+            <div class="step-head">
+              <div class="step-title">
+                <span class="step-number">4</span>
+                <h3>Hacer cada métrica comprensible y basada en evidencia.</h3>
+              </div>
+              <span class="route">/evaluacion/[id]/wizard</span>
+            </div>
+            <div class="step-body stack">
+              <div class="asset-grid">
+                <div class="frame">
+                  <img
+                    src="assets/04-wizard-metric-advanced.png"
+                    alt="Tarjeta de métrica del asistente con ayuda emergente y controles de evidencia avanzada"
+                  />
+                  <span class="pin" style="--x: 53%; --y: 15%">1</span>
+                  <span class="pin" style="--x: 50%; --y: 58%">2</span>
+                  <span class="pin" style="--x: 52%; --y: 98%">3</span>
+                  <div class="caption">
+                    Guía a nivel de métrica: ayuda contextual, rúbrica simple y
+                    campos de evidencia avanzada.
+                  </div>
+                </div>
+                <div class="frame">
+                  <img
+                    src="assets/04b-wizard-save-controls.png"
+                    alt="Controles de guardado del asistente al final de un pilar de métricas"
+                  />
+                  <span class="pin" style="--x: 53%; --y: 74%">4</span>
+                  <span class="pin" style="--x: 90%; --y: 84%">5</span>
+                  <div class="caption">
+                    Controles del asistente: guardar borrador, continuar o
+                    terminar cuando la evidencia está completa.
+                  </div>
+                </div>
+              </div>
+              <div class="notes">
+                <div class="note">
+                  <b>1</b>Ayuda contextual
+                  <p>
+                    Explica cautelas metodológicas y si una métrica aumenta o
+                    reduce la severidad.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>2</b>Modos simple y avanzado
+                  <p>
+                    La rúbrica simple bajo/medio/alto sigue visible aunque se
+                    añada evidencia avanzada.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>3</b>Campos de evidencia
+                  <p>
+                    El modo avanzado pide valor medido, unidad, fuente, ventana
+                    temporal y nota.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>4</b>Métricas no disponibles
+                  <p>
+                    "No disponible" es un estado de dato explícito que afecta a
+                    la cobertura en vez de ocultar incertidumbre.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>5</b>Decisiones de guardado
+                  <p>
+                    Las acciones de borrador, continuar y finalizar hacen que el
+                    flujo sea retomable y explícito.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="step" id="step-5">
+            <div class="step-head">
+              <div class="step-title">
+                <span class="step-number">5</span>
+                <h3>Traducir la evidencia en un cuadro de mando ejecutivo.</h3>
+              </div>
+              <span class="route">/evaluacion/evaluation-demo/scorecard</span>
+            </div>
+            <div class="step-body">
+              <div class="frame">
+                <img
+                  src="assets/05-scorecard-executive.png"
+                  alt="Cuadro de mando ejecutivo con CDI, DDI, PDI, DS, recomendación y panel de escenarios"
+                />
+                <span class="pin" style="--x: 58%; --y: 63%">1</span>
+                <span class="pin" style="--x: 36%; --y: 84%">2</span>
+                <span class="pin" style="--x: 83%; --y: 91%">3</span>
+                <div class="caption">
+                  Cuadro de mando ejecutivo: índices, severidad, pilar
+                  dominante, acciones y entrada a escenarios.
+                </div>
+              </div>
+              <div class="notes">
+                <div class="note">
+                  <b>1</b>CDI/DDI/PDI/DS
+                  <p>
+                    Las cuatro tarjetas de resultado resumen el modelo en un
+                    lenguaje apto para una conversación de negocio.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>2</b>Recomendación
+                  <p>
+                    La severidad, el pilar dominante y las siguientes acciones
+                    traducen el diagnóstico en una decisión.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>3</b>Panel de escenarios
+                  <p>
+                    La capacidad y el coste se presentan como escenarios, no
+                    como contabilidad exacta.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="step" id="step-6">
+            <div class="step-head">
+              <div class="step-title">
+                <span class="step-number">6</span>
+                <h3>
+                  Mantener la economía con cautela: primero capacidad, euros
+                  solo con supuestos.
+                </h3>
+              </div>
+              <span class="route">panel de escenarios del cuadro de mando</span>
+            </div>
+            <div class="step-body">
+              <div class="frame tall">
+                <img
+                  src="assets/06-scorecard-scenario-panel.png"
+                  alt="Recorte del panel de escenarios con fricción, capacidad y coste"
+                />
+                <span class="pin" style="--x: 18%; --y: 13%">1</span>
+                <span class="pin" style="--x: 38%; --y: 43%">2</span>
+                <span class="pin" style="--x: 40%; --y: 84%">3</span>
+                <div class="caption">
+                  Recorte del panel de escenarios: conservador, central y
+                  tensionado.
+                </div>
+              </div>
+              <div class="notes">
+                <div class="note">
+                  <b>1</b>Guardrail económico
+                  <p>
+                    El panel empieza con el aviso de que la salida económica de
+                    MIURA se basa en escenarios.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>2</b>Capacidad perdida
+                  <p>
+                    Cada escenario muestra horas perdidas mensuales y totales
+                    antes de cualquier lectura monetaria.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>3</b>Salidas heurísticas
+                  <p>
+                    El principal y el punto de equilibrio aparecen solo cuando
+                    el motor tiene suficientes supuestos válidos.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="step" id="step-7">
+            <div class="step-head">
+              <div class="step-title">
+                <span class="step-number">7</span>
+                <h3>
+                  Abrir la vista técnica cuando alguien necesita trazabilidad.
+                </h3>
+              </div>
+              <span class="route">pestaña técnica del cuadro de mando</span>
+            </div>
+            <div class="step-body stack">
+              <div class="asset-grid">
+                <div class="frame">
+                  <img
+                    src="assets/07-scorecard-technical.png"
+                    alt="Cuadro de mando técnico con pesos, cobertura y escenarios λ"
+                  />
+                  <span class="pin" style="--x: 82%; --y: 66%">1</span>
+                  <span class="pin" style="--x: 44%; --y: 84%">2</span>
+                  <div class="caption">
+                    Parte superior de la pestaña técnica: fórmulas, cobertura,
+                    pesos y lambdas.
+                  </div>
+                </div>
+                <div class="frame">
+                  <img
+                    src="assets/08-scorecard-traceability.png"
+                    alt="Tabla de trazabilidad del cuadro de mando técnico con filas de métricas"
+                  />
+                  <span class="pin" style="--x: 57%; --y: 54%">3</span>
+                  <span class="pin" style="--x: 78%; --y: 54%">4</span>
+                  <div class="caption">
+                    Trazabilidad técnica: columnas de observada, faltante,
+                    normalizado y evidencia.
+                  </div>
+                </div>
+              </div>
+              <div class="notes">
+                <div class="note">
+                  <b>1</b>Transparencia de fórmulas
+                  <p>
+                    La fórmula de DS y las lambdas de escenarios son visibles en
+                    el producto, no quedan ocultas en la documentación.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>2</b>Cobertura por pilar
+                  <p>
+                    La cobertura aparece junto a la puntuación para evitar
+                    interpretaciones demasiado seguras.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>3</b>Trazabilidad de métricas
+                  <p>
+                    Se listan las doce métricas, incluida la evidencia faltante
+                    o no disponible.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>4</b>Columna de evidencia
+                  <p>
+                    Las fuentes y notas conectan cada cálculo con las entradas
+                    del usuario.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="step" id="step-8">
+            <div class="step-head">
+              <div class="step-title">
+                <span class="step-number">8</span>
+                <h3>Convertir el diagnóstico en un informe compartible.</h3>
+              </div>
+              <span class="route">/evaluacion/evaluation-demo/informe</span>
+            </div>
+            <div class="step-body stack">
+              <div class="asset-grid three">
+                <div class="frame">
+                  <img
+                    src="assets/09-report-top.png"
+                    alt="Parte superior del informe con botones de exportación, metadatos y avisos de privacidad"
+                  />
+                  <span class="pin" style="--x: 82%; --y: 56%">1</span>
+                  <span class="pin" style="--x: 50%; --y: 86%">2</span>
+                  <div class="caption">
+                    Acciones de exportación del informe y avisos de privacidad.
+                  </div>
+                </div>
+                <div class="frame">
+                  <img
+                    src="assets/10-report-scenarios.png"
+                    alt="Sección de escenarios del informe con capacidad y coste"
+                  />
+                  <span class="pin" style="--x: 67%; --y: 64%">3</span>
+                  <div class="caption">
+                    Los escenarios del informe conservan el encuadre de
+                    capacidad primero.
+                  </div>
+                </div>
+                <div class="frame">
+                  <img
+                    src="assets/11-report-recommendations.png"
+                    alt="Recomendaciones del informe, mapeo Scrum/Kanban, fórmulas y supuestos"
+                  />
+                  <span class="pin" style="--x: 48%; --y: 42%">4</span>
+                  <div class="caption">
+                    Recomendaciones, mapeo Scrum/Kanban, fórmulas y supuestos.
+                  </div>
+                </div>
+              </div>
+              <div class="notes">
+                <div class="note">
+                  <b>1</b>Controles de exportación
+                  <p>
+                    Descargar un archivo Markdown, imprimir/guardar PDF o copiar
+                    Markdown desde el navegador.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>2</b>Aviso de privacidad
+                  <p>
+                    El informe recuerda al usuario que revise los detalles
+                    sensibles del proyecto antes de compartirlo.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>3</b>Continuidad de escenarios
+                  <p>
+                    El mismo encuadre de escenarios del cuadro de mando se
+                    conserva en el artefacto exportable.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>4</b>Salida accionable
+                  <p>
+                    El informe final incluye recomendaciones, mapeo ágil,
+                    fórmulas, supuestos y avisos.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="step" id="step-9">
+            <div class="step-head">
+              <div class="step-title">
+                <span class="step-number">9</span>
+                <h3>Mantener los datos locales visibles y portables.</h3>
+              </div>
+              <span class="route">/ajustes-locales</span>
+            </div>
+            <div class="step-body">
+              <div class="frame">
+                <img
+                  src="assets/12-local-settings.png"
+                  alt="Página de ajustes locales con evaluaciones locales, controles de archivo JSON y acción de borrado"
+                />
+                <span class="pin" style="--x: 49%; --y: 64%">1</span>
+                <span class="pin" style="--x: 82%; --y: 62%">2</span>
+                <span class="pin" style="--x: 83%; --y: 96%">3</span>
+                <div class="caption">
+                  Ajustes locales: sin cuenta, estado del almacenamiento local,
+                  portabilidad de archivo JSON y punto de entrada al borrado.
+                </div>
+              </div>
+              <div class="notes">
+                <div class="note">
+                  <b>1</b>Evaluaciones guardadas
+                  <p>
+                    El usuario puede reabrir el asistente o el cuadro de mando
+                    desde el conjunto de datos local del navegador.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>2</b>Portabilidad de datos
+                  <p>
+                    La exportación/importación es explícita y validada, con
+                    explicación del comportamiento de reemplazo.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>3</b>Borrado local
+                  <p>
+                    El borrado se limita a este navegador, no a un espacio de
+                    trabajo en servidor.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="step" id="step-10">
+            <div class="step-head">
+              <div class="step-title">
+                <span class="step-number">10</span>
+                <h3>
+                  Usar la conversación con cuidado, con minimización explícita
+                  del contexto.
+                </h3>
+              </div>
+              <span class="route">/chat</span>
+            </div>
+            <div class="step-body stack">
+              <div class="asset-grid">
+                <div class="frame">
+                  <img
+                    src="assets/17-chat-context-empty.png"
+                    alt="Estado inicial de la conversación con panel de contexto de evaluación"
+                  />
+                  <span class="pin" style="--x: 46%; --y: 82%">1</span>
+                  <span class="pin" style="--x: 94%; --y: 50%">2</span>
+                  <div class="caption">
+                    Conversación antes de preguntar: ejemplos, estado inicial y
+                    selector de contexto mínimo.
+                  </div>
+                </div>
+                <div class="frame">
+                  <img
+                    src="assets/18-chat-answer.png"
+                    alt="Respuesta de la conversación con estado controlado sin fuentes y contexto activo"
+                  />
+                  <span class="pin" style="--x: 54%; --y: 54%">3</span>
+                  <span class="pin" style="--x: 93%; --y: 50%">4</span>
+                  <div class="caption">
+                    Resultado de captura en vivo: el RAG local devolvió la
+                    respuesta segura sin fuentes.
+                  </div>
+                </div>
+              </div>
+              <div class="notes">
+                <div class="note">
+                  <b>1</b>Preguntas de ejemplo
+                  <p>
+                    El estado inicial muestra el dominio de preguntas seguras:
+                    PDI, DS y Scrum/Kanban.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>2</b>Contexto mínimo de evaluación
+                  <p>
+                    El selector envía solo un resumen, no métricas crudas, notas
+                    de evidencia ni JSON.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>3</b>Estado de respuesta controlada
+                  <p>
+                    En esta captura, la recuperación devolvió fuentes
+                    insuficientes y la interfaz no inventó una respuesta.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>4</b>Resumen de contexto
+                  <p>
+                    Cuando el contexto está activo, el usuario ve exactamente
+                    qué DS, cobertura, pilar y recomendación pueden informar al
+                    conversación.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="step" id="step-11">
+            <div class="step-head">
+              <div class="step-title">
+                <span class="step-number">11</span>
+                <h3>
+                  Mostrar estados de resiliencia en vez de ocultar huecos.
+                </h3>
+              </div>
+              <span class="route"
+                >sesión ausente y conversación sin fuentes</span
+              >
+            </div>
+            <div class="step-body stack">
+              <div class="asset-grid">
+                <div class="frame">
+                  <img
+                    src="assets/16-missing-evaluation.png"
+                    alt="Estado del asistente sin evaluación local disponible"
+                  />
+                  <span class="pin" style="--x: 53%; --y: 57%">1</span>
+                  <div class="caption">
+                    Estado de sesión local ausente si el navegador no tiene una
+                    evaluación guardada.
+                  </div>
+                </div>
+                <div class="frame">
+                  <img
+                    src="assets/19-chat-no-sources.png"
+                    alt="Estado de conversación sin fuentes tras una pregunta fuera de dominio"
+                  />
+                  <span class="pin" style="--x: 50%; --y: 80%">2</span>
+                  <span class="pin" style="--x: 84%; --y: 68%">3</span>
+                  <div class="caption">
+                    Estado de conversación sin fuentes tras una pregunta fuera
+                    del corpus MIURA.
+                  </div>
+                </div>
+              </div>
+              <div class="notes">
+                <div class="note">
+                  <b>1</b>Sesión ausente recuperable
+                  <p>
+                    La app indica al usuario que cree, cargue o importe una
+                    evaluación en vez de fallar en silencio.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>2</b>Comportamiento sin fuentes
+                  <p>
+                    Las preguntas fuera de dominio o con fuentes insuficientes
+                    reciben una respuesta controlada sin citas fabricadas.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>3</b>Panel de últimas fuentes
+                  <p>
+                    El panel lateral refleja el último estado de recuperación
+                    para que el usuario pueda auditar la disponibilidad de
+                    evidencia.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="step" id="step-12">
+            <div class="step-head">
+              <div class="step-title">
+                <span class="step-number">12</span>
+                <h3>
+                  Apoyar la evaluación con páginas de metodología, integración
+                  ágil y glosario.
+                </h3>
+              </div>
+              <span class="route">/metodologia, /scrum-kanban, /glosario</span>
+            </div>
+            <div class="step-body stack">
+              <div class="asset-grid three">
+                <div class="frame">
+                  <img
+                    src="assets/13-methodology.png"
+                    alt="Página de metodología con flujo MIURA y explicación de pilares"
+                  />
+                  <span class="pin" style="--x: 48%; --y: 86%">1</span>
+                  <div class="caption">
+                    Metodología: flujo MIURA, pilares, fórmulas y avisos.
+                  </div>
+                </div>
+                <div class="frame">
+                  <img
+                    src="assets/14-scrum-kanban.png"
+                    alt="Página de integración Scrum/Kanban"
+                  />
+                  <span class="pin" style="--x: 52%; --y: 62%">2</span>
+                  <div class="caption">
+                    Scrum/Kanban: MIURA complementa ceremonias existentes y
+                    políticas de flujo.
+                  </div>
+                </div>
+                <div class="frame">
+                  <img
+                    src="assets/15-glossary.png"
+                    alt="Página de glosario con fórmulas y definiciones"
+                  />
+                  <span class="pin" style="--x: 62%; --y: 55%">3</span>
+                  <div class="caption">
+                    Glosario: apoyo de fórmulas y términos para lectores no
+                    técnicos.
+                  </div>
+                </div>
+              </div>
+              <div class="notes">
+                <div class="note">
+                  <b>1</b>Método MIURA
+                  <p>
+                    Explica Medición, Integración, Incertidumbre, Recomendación
+                    y Alineación ágil.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>2</b>Encaje ágil
+                  <p>
+                    Muestra dónde entra MIURA en refinamiento, planificación,
+                    revisión, retrospectiva, reposición y revisión de servicio.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>3</b>Apoyo terminológico
+                  <p>
+                    Las definiciones y fórmulas hacen legibles las etiquetas de
+                    cuadro de mando sin jerga de ingeniería.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+
+          <article class="step" id="step-13">
+            <div class="step-head">
+              <div class="step-title">
+                <span class="step-number">13</span>
+                <h3>
+                  Confirmar que el producto sigue siendo comprensible en móvil.
+                </h3>
+              </div>
+              <span class="route">vista móvil 390 x 844</span>
+            </div>
+            <div class="step-body stack">
+              <div class="asset-grid three">
+                <div class="frame">
+                  <img
+                    src="assets/20-mobile-new-evaluation.png"
+                    alt="Pantalla móvil de nueva evaluación"
+                  />
+                  <div class="caption">Flujo móvil de creación.</div>
+                </div>
+                <div class="frame">
+                  <img
+                    src="assets/21-mobile-scorecard.png"
+                    alt="Pantalla móvil del cuadro de mando"
+                  />
+                  <div class="caption">Resumen móvil del cuadro de mando.</div>
+                </div>
+                <div class="frame">
+                  <img
+                    src="assets/22-mobile-chat.png"
+                    alt="Pantalla móvil de la conversación"
+                  />
+                  <div class="caption">Diseño móvil de la conversación.</div>
+                </div>
+              </div>
+              <div class="notes">
+                <div class="note">
+                  <b>1</b>Cobertura adaptativa
+                  <p>
+                    Los estados móviles capturados no tuvieron desbordamiento
+                    horizontal a 390 x 844.
+                  </p>
+                </div>
+                <div class="note">
+                  <b>2</b>Contenido priorizado
+                  <p>
+                    Los formularios principales, tarjetas de cuadro de mando y
+                    preguntas sugeridas de la conversación siguen siendo
+                    legibles en una composición de una columna.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <section class="section shell" aria-labelledby="coverage-title">
+        <div class="section-header">
+          <div>
+            <span class="kicker">Cobertura y huecos</span>
+            <h2 id="coverage-title">
+              Qué cubre esta demo y qué no pudo capturarse.
+            </h2>
+          </div>
+        </div>
+        <div class="asset-grid">
+          <div class="panel">
+            <h3>Rutas y pantallas cubiertas</h3>
+            <ul>
+              <li>
+                Página inicial, nueva evaluación, asistente, cuadro de mando,
+                informe y conversación.
+              </li>
+              <li>Metodología, Scrum/Kanban, glosario y ajustes locales.</li>
+              <li>
+                Vistas de resultado ejecutiva y técnica, además de la salida de
+                exportación del informe.
+              </li>
+              <li>Estados de resiliencia de sesión ausente y sin fuentes.</li>
+              <li>
+                Capturas en vista de escritorio por defecto y móvil 390 x 844.
+              </li>
+            </ul>
+          </div>
+          <div class="panel status">
+            <h3>Hueco conocido de captura</h3>
+            <p>
+              El RAG está implementado, pero la recuperación en vivo devolvió
+              fuentes insuficientes en esta captura local, por lo que el guion
+              visual no fabrica una respuesta con citas. La comprobación
+              posterior confirmó que la pregunta "que es PDI" recupera citas con
+              el umbral aceptado del proyecto; la captura se hizo con una
+              configuración local más estricta. Las pantallas de conversación
+              documentan el estado seguro sin fuentes y los controles de
+              contexto mínimo de evaluación.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer shell">
+      Capturado desde <code>http://127.0.0.1:3000</code> el 2026-05-27. La demo
+      usa datos genéricos del caso reproducible MIURA y evita variables de
+      entorno, secretos o contenido de navegador no relacionado.
+    </footer>
+  </body>
+</html>
